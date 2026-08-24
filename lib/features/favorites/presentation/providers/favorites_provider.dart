@@ -1,0 +1,43 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/di/injection_container.dart';
+import '../../domain/entities/favorite_city_entity.dart';
+import '../../domain/usecases/manage_favorites.dart';
+
+class FavoritesNotifier extends StateNotifier<List<FavoriteCityEntity>> {
+  final GetFavorites getFavorites;
+  final AddFavorite addFavoriteUseCase;
+  final RemoveFavorite removeFavoriteUseCase;
+
+  FavoritesNotifier({
+    required this.getFavorites,
+    required this.addFavoriteUseCase,
+    required this.removeFavoriteUseCase,
+  }) : super([]) {
+    refresh();
+  }
+
+  Future<void> refresh() async {
+    state = await getFavorites();
+  }
+
+  Future<void> add(String city) async {
+    await addFavoriteUseCase(city);
+    await refresh();
+  }
+
+  Future<void> remove(String city) async {
+    await removeFavoriteUseCase(city);
+    await refresh();
+  }
+
+  bool contains(String city) =>
+      state.any((f) => f.cityName.toLowerCase() == city.toLowerCase());
+}
+
+final favoritesProvider = StateNotifierProvider<FavoritesNotifier, List<FavoriteCityEntity>>((ref) {
+  return FavoritesNotifier(
+    getFavorites: sl<GetFavorites>(),
+    addFavoriteUseCase: sl<AddFavorite>(),
+    removeFavoriteUseCase: sl<RemoveFavorite>(),
+  );
+});

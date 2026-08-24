@@ -1,0 +1,12 @@
+# Standard Flutter
+.dart_tool/
+.packages
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+*.iml
+.idea/
+
+# Secrets - critical: never commit real API keys
+assets/env/.env
+*.g.dart

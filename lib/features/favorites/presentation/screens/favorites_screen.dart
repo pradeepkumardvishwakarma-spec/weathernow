@@ -1,0 +1,75 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import '../../../weather/presentation/widgets/weather_icon.dart';
+import '../../../settings/presentation/providers/settings_provider.dart';
+import '../../../../core/utils/time_ago.dart';
+import '../providers/favorites_provider.dart';
+import '../providers/favorite_preview_provider.dart';
+
+class FavoritesScreen extends ConsumerWidget {
+  const FavoritesScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final favorites = ref.watch(favoritesProvider);
+
+    if (favorites.isEmpty) {
+      return const Scaffold(
+        body: Center(child: Text('No favorites yet. Star a city from the Home screen.')),
+      );
+    }
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('Favorites')),
+      // ListView.builder: only builds visible rows — matters as the
+      // favorites list grows, keeps scrolling smooth per the brief.
+      body: ListView.builder(
+        itemCount: favorites.length,
+        itemBuilder: (context, index) {
+          final fav = favorites[index];
+          return Dismissible(
+            key: ValueKey(fav.cityName),
+            direction: DismissDirection.endToStart,
+            background: Container(
+              color: Colors.redAccent,
+              alignment: Alignment.centerRight,
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: const Icon(Icons.delete, color: Colors.white),
+            ),
+            onDismissed: (_) => ref.read(favoritesProvider.notifier).remove(fav.cityName),
+            child: _FavoriteTile(cityName: fav.cityName),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _FavoriteTile extends ConsumerWidget {
+  final String cityName;
+  const _FavoriteTile({required this.cityName});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final preview = ref.watch(favoritePreviewProvider(cityName));
+    final settings = ref.watch(settingsProvider);
+
+    return ListTile(
+      title: Text(cityName),
+      subtitle: preview.maybeWhen(
+        data: (w) => w.isFromCache ? Text('Updated ${timeAgo(w.fetchedAt)}') : const Text('Live'),
+        orElse: () => null,
+      ),
+      leading: preview.maybeWhen(
+        data: (w) => WeatherIcon(iconCode: w.iconCode, size: 32),
+        orElse: () => const SizedBox(width: 32, height: 32, child: CircularProgressIndicator(strokeWidth: 2)),
+      ),
+      trailing: preview.maybeWhen(
+        data: (w) => Text('${convertTemp(w.temperature, settings.unit).round()}${unitSuffix(settings.unit)}'),
+        orElse: () => null,
+      ),
+      onTap: () => context.push('/city/$cityName'),
+    );
+  }
+}
