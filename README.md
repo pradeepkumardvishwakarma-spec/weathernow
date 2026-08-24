@@ -63,7 +63,7 @@ lib/
 - **Pagination**: `ListView.builder` is used for both the forecast strip and the favorites list, so only visible items are built — matters more as favorites grow; kept the pattern consistent across both lists per the brief's ask.
 - **Forecast detail without re-fetching**: the tapped day's already-fetched `DailyForecastEntity` (with all its raw 3-hour slots) is passed via `go_router`'s `extra` param. Going back never triggers a new network call.
 - **Image caching**: `cached_network_image` wraps every weather icon (`WeatherIcon` widget) — avoids redundant downloads on scroll/rebuild.
-- **Security**: API key lives only in a git-ignored `.env` asset, injected into requests via a Dio interceptor (never hard-coded, never logged). No secrets stored in Hive. See `docs/AI_ASSISTANCE_NOTES.md` for one security-adjacent thing an AI suggestion got wrong that was caught during review.
+- **Security**: API key lives only in a git-ignored `.env` asset, injected into requests via a Dio interceptor (never hard-coded, never logged). No secrets stored in Hive. See `docs/ai/AI_REVIEW.md` for security-adjacent things an AI suggestion got wrong that were caught during review.
 
 ## Performance notes
 
@@ -83,6 +83,7 @@ Profiled two things reported during development, both with real data rather than
 ## Required submission items
 
 Per the brief, alongside this repo:
-- `docs/PROMPTS_LOG.md` — chat history/prompts used with the AI coding tool
-- `.claude/CLAUDE.md` and `.claude/agents/` — project rules / agent setup used with Claude Code
-- `docs/AI_ASSISTANCE_NOTES.md` — where the AI got Flutter/Dart wrong, how it was caught, what changed
+- `docs/ai/PROMPTS.md` — chat history/prompts used with the AI coding tool
+- `CLAUDE.md` (repo root) and `.claude/` (`agents/`, `skills/`, `rules/`) — project instructions and agent setup used with Claude Code
+- `docs/ai/AI_REVIEW.md` — where the AI got Flutter/Dart wrong, how it was caught, what changed
+- `docs/architecture.md` — architecture diagram
