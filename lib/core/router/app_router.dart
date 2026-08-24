@@ -1,11 +1,11 @@
 import 'package:go_router/go_router.dart';
-import '../../features/weather/presentation/screens/search_home_screen.dart';
-import '../../features/weather/presentation/screens/forecast_detail_screen.dart';
-import '../../features/weather/presentation/screens/city_weather_screen.dart';
-import '../../features/weather/domain/entities/forecast_entity.dart';
-import '../../features/favorites/presentation/screens/favorites_screen.dart';
-import '../../features/settings/presentation/screens/settings_screen.dart';
-import 'app_shell.dart';
+import 'package:weathernow/features/weather/presentation/screens/search_home_screen.dart';
+import 'package:weathernow/features/weather/presentation/screens/forecast_detail_screen.dart';
+import 'package:weathernow/features/weather/presentation/screens/city_weather_screen.dart';
+import 'package:weathernow/features/weather/domain/entities/forecast_entity.dart';
+import 'package:weathernow/features/favorites/presentation/screens/favorites_screen.dart';
+import 'package:weathernow/features/settings/presentation/screens/settings_screen.dart';
+import 'package:weathernow/core/router/app_shell.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/',

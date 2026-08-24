@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/di/injection_container.dart';
-import '../../domain/entities/settings_entity.dart';
-import '../../domain/repositories/settings_repository.dart';
+import 'package:weathernow/core/di/injection_container.dart';
+import 'package:weathernow/features/settings/domain/entities/settings_entity.dart';
+import 'package:weathernow/features/settings/domain/repositories/settings_repository.dart';
 
 /// Loaded eagerly at app start (see main.dart) so every screen can
 /// `ref.watch(settingsProvider)` and rebuild instantly when the unit

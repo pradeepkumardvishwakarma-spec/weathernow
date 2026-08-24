@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive/hive.dart';
-import '../../../../core/utils/constants.dart';
-import '../../../favorites/presentation/providers/favorites_provider.dart';
-import '../providers/weather_provider.dart';
-import '../providers/weather_state.dart';
-import '../widgets/city_search_bar.dart';
-import '../widgets/weather_card.dart';
-import '../widgets/forecast_strip.dart';
+import 'package:weathernow/core/utils/constants.dart';
+import 'package:weathernow/features/favorites/presentation/providers/favorites_provider.dart';
+import 'package:weathernow/features/weather/presentation/providers/weather_provider.dart';
+import 'package:weathernow/features/weather/presentation/providers/weather_state.dart';
+import 'package:weathernow/features/weather/presentation/widgets/city_search_bar.dart';
+import 'package:weathernow/features/weather/presentation/widgets/weather_card.dart';
+import 'package:weathernow/features/weather/presentation/widgets/forecast_strip.dart';
 
 class SearchHomeScreen extends ConsumerStatefulWidget {
   const SearchHomeScreen({super.key});

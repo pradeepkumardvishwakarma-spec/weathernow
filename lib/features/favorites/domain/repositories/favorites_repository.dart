@@ -1,4 +1,4 @@
-import '../entities/favorite_city_entity.dart';
+import 'package:weathernow/features/favorites/domain/entities/favorite_city_entity.dart';
 
 abstract class FavoritesRepository {
   Future<List<FavoriteCityEntity>> getFavorites();

@@ -1,5 +1,5 @@
 import 'package:dartz/dartz.dart';
-import '../error/failures.dart';
+import 'package:weathernow/core/error/failures.dart';
 
 /// Every use case takes a single [Params] object and returns
 /// Either a [Failure] or a [Type] on success. Keeps domain layer

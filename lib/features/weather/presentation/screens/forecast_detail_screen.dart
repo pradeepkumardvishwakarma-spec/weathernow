@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart' as intl;
-import '../../domain/entities/forecast_entity.dart';
-import '../../../settings/presentation/providers/settings_provider.dart';
-import '../widgets/weather_icon.dart';
+import 'package:weathernow/features/weather/domain/entities/forecast_entity.dart';
+import 'package:weathernow/features/settings/presentation/providers/settings_provider.dart';
+import 'package:weathernow/features/weather/presentation/widgets/weather_icon.dart';
 
 /// Receives the already-fetched [DailyForecastEntity] via GoRouter's
 /// `extra` — per the spec, going back to Home should NOT re-fetch

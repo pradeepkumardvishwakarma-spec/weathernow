@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../weather/presentation/widgets/weather_icon.dart';
-import '../../../settings/presentation/providers/settings_provider.dart';
-import '../../../../core/utils/time_ago.dart';
-import '../providers/favorites_provider.dart';
-import '../providers/favorite_preview_provider.dart';
+import 'package:weathernow/features/weather/presentation/widgets/weather_icon.dart';
+import 'package:weathernow/features/settings/presentation/providers/settings_provider.dart';
+import 'package:weathernow/core/utils/time_ago.dart';
+import 'package:weathernow/features/favorites/presentation/providers/favorites_provider.dart';
+import 'package:weathernow/features/favorites/presentation/providers/favorite_preview_provider.dart';
 
 class FavoritesScreen extends ConsumerWidget {
   const FavoritesScreen({super.key});

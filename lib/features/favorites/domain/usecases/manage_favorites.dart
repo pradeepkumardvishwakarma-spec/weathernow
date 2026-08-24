@@ -1,5 +1,5 @@
-import '../entities/favorite_city_entity.dart';
-import '../repositories/favorites_repository.dart';
+import 'package:weathernow/features/favorites/domain/entities/favorite_city_entity.dart';
+import 'package:weathernow/features/favorites/domain/repositories/favorites_repository.dart';
 
 class GetFavorites {
   final FavoritesRepository repository;

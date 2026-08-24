@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' as intl;
 import 'package:go_router/go_router.dart';
-import '../../domain/entities/forecast_entity.dart';
-import 'weather_icon.dart';
+import 'package:weathernow/features/weather/domain/entities/forecast_entity.dart';
+import 'package:weathernow/features/weather/presentation/widgets/weather_icon.dart';
 
 /// ListView.builder here means only the visible day-cards are built/laid
 /// out at any time (lazy build), rather than inflating all 5 up front —

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../domain/entities/settings_entity.dart';
-import '../providers/settings_provider.dart';
+import 'package:weathernow/features/settings/domain/entities/settings_entity.dart';
+import 'package:weathernow/features/settings/presentation/providers/settings_provider.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});

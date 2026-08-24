@@ -1,6 +1,6 @@
-import '../../domain/entities/favorite_city_entity.dart';
-import '../../domain/repositories/favorites_repository.dart';
-import '../datasources/favorites_local_datasource.dart';
+import 'package:weathernow/features/favorites/domain/entities/favorite_city_entity.dart';
+import 'package:weathernow/features/favorites/domain/repositories/favorites_repository.dart';
+import 'package:weathernow/features/favorites/data/datasources/favorites_local_datasource.dart';
 
 class FavoritesRepositoryImpl implements FavoritesRepository {
   final FavoritesLocalDataSource localDataSource;

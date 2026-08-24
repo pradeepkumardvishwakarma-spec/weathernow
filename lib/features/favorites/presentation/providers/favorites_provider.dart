@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/di/injection_container.dart';
-import '../../domain/entities/favorite_city_entity.dart';
-import '../../domain/usecases/manage_favorites.dart';
+import 'package:weathernow/core/di/injection_container.dart';
+import 'package:weathernow/features/favorites/domain/entities/favorite_city_entity.dart';
+import 'package:weathernow/features/favorites/domain/usecases/manage_favorites.dart';
 
 class FavoritesNotifier extends StateNotifier<List<FavoriteCityEntity>> {
   final GetFavorites getFavorites;

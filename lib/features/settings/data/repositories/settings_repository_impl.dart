@@ -1,7 +1,7 @@
 import 'package:hive/hive.dart';
-import '../../../../core/utils/constants.dart';
-import '../../domain/entities/settings_entity.dart';
-import '../../domain/repositories/settings_repository.dart';
+import 'package:weathernow/core/utils/constants.dart';
+import 'package:weathernow/features/settings/domain/entities/settings_entity.dart';
+import 'package:weathernow/features/settings/domain/repositories/settings_repository.dart';
 
 class SettingsRepositoryImpl implements SettingsRepository {
   Box get _box => Hive.box(HiveBoxes.settings);

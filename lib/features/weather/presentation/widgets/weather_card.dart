@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../domain/entities/weather_entity.dart';
-import '../../../settings/presentation/providers/settings_provider.dart';
-import 'weather_icon.dart';
-import '../../../../core/utils/time_ago.dart';
+import 'package:weathernow/features/weather/domain/entities/weather_entity.dart';
+import 'package:weathernow/features/settings/presentation/providers/settings_provider.dart';
+import 'package:weathernow/features/weather/presentation/widgets/weather_icon.dart';
+import 'package:weathernow/core/utils/time_ago.dart';
 
 class WeatherCard extends ConsumerWidget {
   final WeatherEntity weather;

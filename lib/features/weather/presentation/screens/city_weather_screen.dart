@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../providers/weather_provider.dart';
-import '../providers/weather_state.dart';
-import '../widgets/weather_card.dart';
-import '../widgets/forecast_strip.dart';
+import 'package:weathernow/features/weather/presentation/providers/weather_provider.dart';
+import 'package:weathernow/features/weather/presentation/providers/weather_state.dart';
+import 'package:weathernow/features/weather/presentation/widgets/weather_card.dart';
+import 'package:weathernow/features/weather/presentation/widgets/forecast_strip.dart';
 
 /// "Tapping [a favorite] opens the same detail view as a fresh search."
 /// Rather than duplicating Home's body, we trigger the same
