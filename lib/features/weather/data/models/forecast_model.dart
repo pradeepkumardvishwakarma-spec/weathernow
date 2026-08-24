@@ -27,10 +27,10 @@ class ForecastSlotModel extends ForecastSlotEntity {
       };
 
   factory ForecastSlotModel.fromHiveJson(Map<dynamic, dynamic> json) => ForecastSlotModel(
-        dateTime: DateTime.parse(json['dateTime'] as String),
-        temperature: json['temperature'] as double,
-        description: json['description'] as String,
-        iconCode: json['iconCode'] as String,
+        dateTime: DateTime.tryParse(json['dateTime'] as String? ?? '') ?? DateTime.now(),
+        temperature: (json['temperature'] as num?)?.toDouble() ?? 0.0,
+        description: json['description'] as String? ?? '',
+        iconCode: json['iconCode'] as String? ?? '01d',
       );
 }
 
@@ -102,24 +102,28 @@ class ForecastModel extends ForecastEntity {
             .toList(),
       };
 
+  // Same null-safe-with-fallback approach as fromJson above — see
+  // WeatherModel.fromHiveJson for why a cached entry can't assume
+  // well-formed data the way a fresh API response can.
   factory ForecastModel.fromHiveJson(Map<dynamic, dynamic> json) {
-    final daily = (json['dailyForecasts'] as List).map((d) {
-      final slots = (d['slots'] as List)
+    final daily = ((json['dailyForecasts'] as List?) ?? []).map((d) {
+      final dayJson = d as Map<dynamic, dynamic>;
+      final slots = ((dayJson['slots'] as List?) ?? [])
           .map((s) => ForecastSlotModel.fromHiveJson(s as Map<dynamic, dynamic>))
           .toList();
       return DailyForecastEntity(
-        date: DateTime.parse(d['date'] as String),
-        avgTemperature: d['avgTemperature'] as double,
-        description: d['description'] as String,
-        iconCode: d['iconCode'] as String,
+        date: DateTime.tryParse(dayJson['date'] as String? ?? '') ?? DateTime.now(),
+        avgTemperature: (dayJson['avgTemperature'] as num?)?.toDouble() ?? 0.0,
+        description: dayJson['description'] as String? ?? '',
+        iconCode: dayJson['iconCode'] as String? ?? '01d',
         slots: slots,
       );
     }).toList();
 
     return ForecastModel(
-      cityName: json['cityName'] as String,
+      cityName: json['cityName'] as String? ?? '',
       dailyForecasts: daily,
-      fetchedAt: DateTime.parse(json['fetchedAt'] as String),
+      fetchedAt: DateTime.tryParse(json['fetchedAt'] as String? ?? '') ?? DateTime.now(),
       isFromCache: true,
     );
   }

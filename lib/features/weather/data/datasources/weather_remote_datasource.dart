@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../../../core/utils/constants.dart';
 import '../models/weather_model.dart';
@@ -53,9 +54,19 @@ class WeatherRemoteDataSourceImpl implements WeatherRemoteDataSource {
     if (e.type == DioExceptionType.connectionError) {
       return NetworkException();
     }
-    if (e.response?.statusCode == 404) {
+    final statusCode = e.response?.statusCode;
+    if (statusCode == 404) {
       return CityNotFoundException();
     }
-    return ServerException(e.message ?? 'Unknown server error');
+    // Dio's own e.message is a technical diagnostic string (and can echo
+    // the request URL, including the API key query param) - never forward
+    // it to a user-facing Failure. Log only the status code, dev-build only.
+    if (kDebugMode) {
+      debugPrint('Weather API request failed with status $statusCode');
+    }
+    if (statusCode == 401) {
+      return ServerException("Couldn't connect to the weather service. Please try again later.");
+    }
+    return ServerException();
   }
 }

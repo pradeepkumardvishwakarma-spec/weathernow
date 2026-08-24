@@ -65,6 +65,13 @@ lib/
 - **Image caching**: `cached_network_image` wraps every weather icon (`WeatherIcon` widget) — avoids redundant downloads on scroll/rebuild.
 - **Security**: API key lives only in a git-ignored `.env` asset, injected into requests via a Dio interceptor (never hard-coded, never logged). No secrets stored in Hive. See `docs/AI_ASSISTANCE_NOTES.md` for one security-adjacent thing an AI suggestion got wrong that was caught during review.
 
+## Performance notes
+
+Profiled two things reported during development, both with real data rather than guesses:
+
+- **Skipped-frames warning at cold start** (`Skipped 90 frames!` from Choreographer, reproduced in both debug and `--profile` builds). Traced to Flutter's well-known first-frame shader-compilation cost — the GPU compiling shaders the first time it hits a new draw operation (Material elevation/shadows, gradients, text) — plus native app-init work (`Hive.initFlutter`, opening boxes, DI setup) that runs before `runApp()`, all before Flutter schedules its first frame. Opening the three Hive boxes in `main.dart` was switched from three sequential `await`s to one `Future.wait` (a real, if small, win on that part of cold start), but the bulk of the delay is shader compilation, which needs an SkSL warm-up step (`--cache-sksl` on a real device, bundled at build time) to fully address — not attempted here, flagged instead as a known follow-up.
+- **APK size** — a plain `flutter build apk` (no `--split-per-abi`) came out to ~34MB, which looked high at first glance. Ran `flutter build apk --analyze-size --target-platform=android-arm64` to get a real breakdown instead of guessing: this app's own code (`package:weathernow`) is **77 KB** of the total — the rest is the Flutter engine/framework baseline (`package:flutter` alone is 3MB) that every Flutter app pays per architecture, and dependencies are all proportionate (hive 73KB, go_router 65KB, dio 51KB, riverpod 43KB). A single-ABI (arm64) release build is **17.7MB**; the "34MB" figure was simply the universal APK bundling three architectures' native code (arm64-v8a, armeabi-v7a, x86_64) into one file — not a regression. For real distribution, `flutter build apk --split-per-abi` or `flutter build appbundle` (what Google Play actually wants — it auto-delivers only the architecture each device needs) avoids shipping that multi-ABI bloat to every user.
+
 ## What's stubbed / would do differently with more time
 
 - Hive models here use plain `Map<String, dynamic>` storage rather than generated `TypeAdapter`s (via `hive_generator`/`build_runner`) — simpler for a takehome (no codegen step required to run the project), but a generated adapter would be more type-safe for a larger app.

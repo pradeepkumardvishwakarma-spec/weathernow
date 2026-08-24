@@ -22,7 +22,14 @@ class WeatherLocalDataSourceImpl implements WeatherLocalDataSource {
   Future<WeatherModel> getCachedWeather(String city) async {
     final raw = _box.get(_weatherKey(city));
     if (raw == null) throw CacheException();
-    return WeatherModel.fromHiveJson(Map<dynamic, dynamic>.from(raw as Map));
+    try {
+      return WeatherModel.fromHiveJson(Map<dynamic, dynamic>.from(raw as Map));
+    } catch (_) {
+      // A malformed/corrupted cache entry should be treated exactly like "no
+      // cache" so the repository's existing CacheException handling applies,
+      // instead of an unrelated exception type escaping uncaught.
+      throw CacheException();
+    }
   }
 
   @override
@@ -34,7 +41,11 @@ class WeatherLocalDataSourceImpl implements WeatherLocalDataSource {
   Future<ForecastModel> getCachedForecast(String city) async {
     final raw = _box.get(_forecastKey(city));
     if (raw == null) throw CacheException();
-    return ForecastModel.fromHiveJson(Map<dynamic, dynamic>.from(raw as Map));
+    try {
+      return ForecastModel.fromHiveJson(Map<dynamic, dynamic>.from(raw as Map));
+    } catch (_) {
+      throw CacheException();
+    }
   }
 
   @override

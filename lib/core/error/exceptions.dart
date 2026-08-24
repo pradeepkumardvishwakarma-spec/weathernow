@@ -3,7 +3,7 @@
 /// and translate them into [Failure]s for the rest of the app.
 class ServerException implements Exception {
   final String message;
-  ServerException([this.message = 'Server error']);
+  ServerException([this.message = 'Something went wrong on our end. Please try again.']);
 }
 
 class CityNotFoundException implements Exception {

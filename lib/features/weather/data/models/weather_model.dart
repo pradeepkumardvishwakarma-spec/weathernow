@@ -48,14 +48,17 @@ class WeatherModel extends WeatherEntity {
         'fetchedAt': fetchedAt.toIso8601String(),
       };
 
+  // Same null-safe-with-fallback approach as fromJson above — a cached entry
+  // can be malformed too (schema drift across app versions, corrupted data),
+  // and a hard cast throwing here would otherwise escape uncaught.
   factory WeatherModel.fromHiveJson(Map<dynamic, dynamic> json) => WeatherModel(
-        cityName: json['cityName'] as String,
-        temperature: json['temperature'] as double,
-        description: json['description'] as String,
-        iconCode: json['iconCode'] as String,
-        humidity: json['humidity'] as int,
-        windSpeed: json['windSpeed'] as double,
-        fetchedAt: DateTime.parse(json['fetchedAt'] as String),
+        cityName: json['cityName'] as String? ?? '',
+        temperature: (json['temperature'] as num?)?.toDouble() ?? 0.0,
+        description: json['description'] as String? ?? '',
+        iconCode: json['iconCode'] as String? ?? '01d',
+        humidity: (json['humidity'] as num?)?.toInt() ?? 0,
+        windSpeed: (json['windSpeed'] as num?)?.toDouble() ?? 0.0,
+        fetchedAt: DateTime.tryParse(json['fetchedAt'] as String? ?? '') ?? DateTime.now(),
         isFromCache: true,
       );
 }

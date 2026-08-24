@@ -24,9 +24,12 @@ Future<void> main() async {
   }
 
   await Hive.initFlutter();
-  await Hive.openBox(HiveBoxes.weatherCache);
-  await Hive.openBox(HiveBoxes.favorites);
-  await Hive.openBox(HiveBoxes.settings);
+  // Independent boxes — open them concurrently instead of one after another.
+  await Future.wait([
+    Hive.openBox(HiveBoxes.weatherCache),
+    Hive.openBox(HiveBoxes.favorites),
+    Hive.openBox(HiveBoxes.settings),
+  ]);
 
   await initDependencyInjection();
 

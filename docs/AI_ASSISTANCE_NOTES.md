@@ -1,15 +1,72 @@
 # AI Assistance Notes
 
-> The brief asks for a real account of where the AI got something wrong in Flutter/Dart,
-> how you caught it, and what you changed. **This section needs your own genuine example**
-> from working through this project in Claude Code/Cursor — reviewers are specifically
-> assessing your judgment in catching AI mistakes, so this shouldn't be fabricated.
->
-> What follows is a framework of categories where AI coding tools commonly get Flutter/Dart
-> wrong, to help you recognize and document a real instance if/when you hit one — not a
-> set of claims to copy in as if they were your own findings.
+## Real example: raw Dio exception text leaking into the UI on a 401
+
+**What the AI suggested**
+
+In `lib/features/weather/data/datasources/weather_remote_datasource.dart`,
+`_mapDioError()` explicitly mapped a few known Dio failure types (cancellation,
+timeout, connection error, 404) to their own exceptions, but for everything else —
+including a 401 — it fell through to:
+
+```dart
+return ServerException(e.message ?? 'Unknown server error');
+```
+
+**Why it was wrong**
+
+`DioException.message` is a technical diagnostic string meant for developers, not
+end users — for an HTTP error response it typically describes the status code and
+Dio's `validateStatus` configuration, and can echo back the full request URL
+including query parameters (in this app, that includes the OpenWeatherMap API key).
+`WeatherRepositoryImpl` catches `ServerException` and forwards its `message`
+straight into `ServerFailure`, which the Search screen displays verbatim in a
+`Text()` widget. So that raw string reached the UI unfiltered — a direct violation
+of this project's own CLAUDE.md rule ("Never let the UI display a raw
+exception/error string"), and one the type system didn't catch, because the code
+still satisfied the `Either<Failure, T>` shape; the problem was in the *content* of
+the message, not its type.
+
+**How I caught it**
+
+Not a compile error or a test failure — manual testing. Searched "Mumbai" with the
+`.env` API key still set to the placeholder value, got a 401 from OpenWeatherMap,
+and the error screen showed a long technical string instead of a simple message a
+non-technical user could read.
+
+**What I changed**
+
+`_mapDioError()` no longer forwards `e.message` under any circumstance. Added an
+explicit branch for 401 with a short, curated message, a generic friendly fallback
+for any other unmapped status code, and a `kDebugMode`-gated `debugPrint` of just
+the status code (not the raw message) so the real cause is still visible in the
+dev console without ever reaching the UI or risking the API key ending up in logs.
+
+Before:
+```dart
+return ServerException(e.message ?? 'Unknown server error');
+```
+
+After:
+```dart
+final statusCode = e.response?.statusCode;
+if (statusCode == 404) {
+  return CityNotFoundException();
+}
+if (kDebugMode) {
+  debugPrint('Weather API request failed with status $statusCode');
+}
+if (statusCode == 401) {
+  return ServerException("Couldn't connect to the weather service. Please try again later.");
+}
+return ServerException();
+```
+
+---
 
 ## Categories worth watching for while you build
+
+(Kept as a general reference — useful if you hit a second example before submitting.)
 
 1. **Riverpod API drift** — AI suggestions frequently mix syntax from `StateNotifierProvider`
    (Riverpod 1.x/2.x classic) with the newer code-generation `@riverpod` annotation style, or
@@ -31,21 +88,3 @@
 6. **Null-safety on JSON parsing** — AI-generated `fromJson` factories sometimes assume a key
    is always present in OpenWeatherMap's response (e.g. `wind`, `weather[0]`) and throw on a
    city/response shape that omits it.
-
-## Template for your real entry
-
-```
-### What the AI suggested
-[paste or describe]
-
-### Why it was wrong
-[the specific Flutter/Dart behavior it got wrong]
-
-### How you caught it
-[compile error / runtime crash / test failure / manual review]
-
-### What you changed
-[the actual fix, ideally with a before/after snippet]
-```
-
-*(Replace this whole section with your real example(s) before submitting.)*
