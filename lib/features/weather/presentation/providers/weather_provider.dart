@@ -1,17 +1,17 @@
-import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/di/injection_container.dart';
-import '../../domain/usecases/get_current_weather.dart';
-import '../../domain/usecases/get_forecast.dart';
-import 'weather_state.dart';
+import 'package:weathernow/core/di/injection_container.dart';
+import 'package:weathernow/core/usecase/cancellation_token.dart';
+import 'package:weathernow/features/weather/domain/usecases/get_current_weather.dart';
+import 'package:weathernow/features/weather/domain/usecases/get_forecast.dart';
+import 'package:weathernow/features/weather/presentation/providers/weather_state.dart';
 
-/// A StateNotifier per "session" of searching. It owns a CancelToken
+/// A StateNotifier per "session" of searching. It owns a CancellationToken
 /// so that if the user types a new city before the previous request
 /// finishes, we cancel the in-flight one instead of racing them.
 class WeatherNotifier extends StateNotifier<WeatherState> {
   final GetCurrentWeather getCurrentWeather;
   final GetForecast getForecast;
-  CancelToken? _cancelToken;
+  CancellationToken? _cancelToken;
 
   WeatherNotifier({
     required this.getCurrentWeather,
@@ -22,19 +22,19 @@ class WeatherNotifier extends StateNotifier<WeatherState> {
     if (city.trim().isEmpty) return;
 
     // Cancel any in-flight request for a previous city before starting a new one.
-    _cancelToken?.cancel('New search started');
-    _cancelToken = CancelToken();
+    _cancelToken?.cancel();
+    final cancelToken = CancellationToken();
+    _cancelToken = cancelToken;
 
     state = state.copyWith(status: WeatherStatus.loading, lastQueriedCity: city);
 
     final weatherResult = await getCurrentWeather(
-      GetCurrentWeatherParams(city: city, cancelToken: _cancelToken),
+      GetCurrentWeatherParams(city: city, cancelToken: cancelToken),
     );
 
-    // If the request was cancelled (superseded by a newer search), do nothing —
-    // the newer search's own call will update state.
-    final cancelled = weatherResult.fold((f) => f.message.contains('cancelled'), (_) => false);
-    if (cancelled) return;
+    // If this search was superseded by a newer one, do nothing — the newer
+    // search's own call will update state.
+    if (cancelToken.isCancelled) return;
 
     await weatherResult.fold(
       (failure) async {
@@ -70,7 +70,7 @@ class WeatherNotifier extends StateNotifier<WeatherState> {
 
   @override
   void dispose() {
-    _cancelToken?.cancel('Provider disposed');
+    _cancelToken?.cancel();
     super.dispose();
   }
 }

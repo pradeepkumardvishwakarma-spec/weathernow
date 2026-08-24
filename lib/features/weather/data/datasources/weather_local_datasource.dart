@@ -1,8 +1,8 @@
 import 'package:hive/hive.dart';
-import '../../../../core/error/exceptions.dart';
-import '../../../../core/utils/constants.dart';
-import '../models/weather_model.dart';
-import '../models/forecast_model.dart';
+import 'package:weathernow/core/error/exceptions.dart';
+import 'package:weathernow/core/utils/constants.dart';
+import 'package:weathernow/features/weather/data/models/weather_model.dart';
+import 'package:weathernow/features/weather/data/models/forecast_model.dart';
 
 abstract class WeatherLocalDataSource {
   Future<WeatherModel> getCachedWeather(String city);

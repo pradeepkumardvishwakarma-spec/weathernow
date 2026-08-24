@@ -1,23 +1,24 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:get_it/get_it.dart';
 
-import '../network/dio_client.dart';
-import '../network/network_info.dart';
+import 'package:weathernow/core/network/dio_client.dart';
+import 'package:weathernow/core/network/network_info.dart';
 
-import '../../features/weather/data/datasources/weather_remote_datasource.dart';
-import '../../features/weather/data/datasources/weather_local_datasource.dart';
-import '../../features/weather/data/repositories/weather_repository_impl.dart';
-import '../../features/weather/domain/repositories/weather_repository.dart';
-import '../../features/weather/domain/usecases/get_current_weather.dart';
-import '../../features/weather/domain/usecases/get_forecast.dart';
+import 'package:weathernow/features/weather/data/datasources/weather_remote_datasource.dart';
+import 'package:weathernow/features/weather/data/datasources/weather_local_datasource.dart';
+import 'package:weathernow/features/weather/data/repositories/weather_repository_impl.dart';
+import 'package:weathernow/features/weather/domain/repositories/weather_repository.dart';
+import 'package:weathernow/features/weather/domain/usecases/get_current_weather.dart';
+import 'package:weathernow/features/weather/domain/usecases/get_forecast.dart';
+import 'package:weathernow/features/weather/domain/usecases/get_cached_weather.dart';
 
-import '../../features/favorites/data/datasources/favorites_local_datasource.dart';
-import '../../features/favorites/data/repositories/favorites_repository_impl.dart';
-import '../../features/favorites/domain/repositories/favorites_repository.dart';
-import '../../features/favorites/domain/usecases/manage_favorites.dart';
+import 'package:weathernow/features/favorites/data/datasources/favorites_local_datasource.dart';
+import 'package:weathernow/features/favorites/data/repositories/favorites_repository_impl.dart';
+import 'package:weathernow/features/favorites/domain/repositories/favorites_repository.dart';
+import 'package:weathernow/features/favorites/domain/usecases/manage_favorites.dart';
 
-import '../../features/settings/data/repositories/settings_repository_impl.dart';
-import '../../features/settings/domain/repositories/settings_repository.dart';
+import 'package:weathernow/features/settings/data/repositories/settings_repository_impl.dart';
+import 'package:weathernow/features/settings/domain/repositories/settings_repository.dart';
 
 /// Service locator (get_it). This is what gives us loose coupling:
 /// - Widgets/providers depend on abstract repositories/use cases, never
@@ -41,6 +42,7 @@ Future<void> initDependencyInjection() async {
       ));
   sl.registerFactory(() => GetCurrentWeather(sl()));
   sl.registerFactory(() => GetForecast(sl()));
+  sl.registerFactory(() => GetCachedWeather(sl()));
 
   // --- Favorites feature ---
   sl.registerLazySingleton(() => FavoritesLocalDataSource());

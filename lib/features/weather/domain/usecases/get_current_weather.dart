@@ -1,9 +1,9 @@
-import 'package:dio/dio.dart' show CancelToken;
 import 'package:dartz/dartz.dart';
-import '../../../../core/error/failures.dart';
-import '../../../../core/usecase/usecase.dart';
-import '../entities/weather_entity.dart';
-import '../repositories/weather_repository.dart';
+import 'package:weathernow/core/error/failures.dart';
+import 'package:weathernow/core/usecase/usecase.dart';
+import 'package:weathernow/core/usecase/cancellation_token.dart';
+import 'package:weathernow/features/weather/domain/entities/weather_entity.dart';
+import 'package:weathernow/features/weather/domain/repositories/weather_repository.dart';
 
 class GetCurrentWeather implements UseCase<WeatherEntity, GetCurrentWeatherParams> {
   final WeatherRepository repository;
@@ -17,6 +17,6 @@ class GetCurrentWeather implements UseCase<WeatherEntity, GetCurrentWeatherParam
 
 class GetCurrentWeatherParams {
   final String city;
-  final CancelToken? cancelToken;
+  final CancellationToken? cancelToken;
   const GetCurrentWeatherParams({required this.city, this.cancelToken});
 }

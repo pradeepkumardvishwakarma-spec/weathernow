@@ -1,4 +1,4 @@
-import '../../domain/entities/weather_entity.dart';
+import 'package:weathernow/features/weather/domain/entities/weather_entity.dart';
 
 /// Data model = Entity + JSON (de)serialization.
 /// Keeping this out of domain keeps domain framework-agnostic.

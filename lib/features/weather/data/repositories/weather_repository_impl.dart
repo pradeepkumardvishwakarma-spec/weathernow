@@ -1,13 +1,13 @@
 import 'package:dartz/dartz.dart';
-import 'package:dio/dio.dart' show CancelToken;
-import '../../../../core/error/exceptions.dart';
-import '../../../../core/error/failures.dart';
-import '../../../../core/network/network_info.dart';
-import '../../domain/entities/weather_entity.dart';
-import '../../domain/entities/forecast_entity.dart';
-import '../../domain/repositories/weather_repository.dart';
-import '../datasources/weather_remote_datasource.dart';
-import '../datasources/weather_local_datasource.dart';
+import 'package:weathernow/core/error/exceptions.dart';
+import 'package:weathernow/core/usecase/cancellation_token.dart';
+import 'package:weathernow/core/error/failures.dart';
+import 'package:weathernow/core/network/network_info.dart';
+import 'package:weathernow/features/weather/domain/entities/weather_entity.dart';
+import 'package:weathernow/features/weather/domain/entities/forecast_entity.dart';
+import 'package:weathernow/features/weather/domain/repositories/weather_repository.dart';
+import 'package:weathernow/features/weather/data/datasources/weather_remote_datasource.dart';
+import 'package:weathernow/features/weather/data/datasources/weather_local_datasource.dart';
 
 /// This is the single place that decides "online vs offline" and
 /// translates data-layer Exceptions into domain-layer Failures.
@@ -27,7 +27,7 @@ class WeatherRepositoryImpl implements WeatherRepository {
   @override
   Future<Either<Failure, WeatherEntity>> getCurrentWeather(
     String city, {
-    CancelToken? cancelToken,
+    CancellationToken? cancelToken,
   }) async {
     if (await networkInfo.isConnected) {
       try {
@@ -63,9 +63,19 @@ class WeatherRepositoryImpl implements WeatherRepository {
   }
 
   @override
+  Future<Either<Failure, WeatherEntity>> getCachedWeatherOnly(String city) async {
+    try {
+      final cached = await localDataSource.getCachedWeather(city);
+      return Right(cached);
+    } on CacheException {
+      return const Left(CacheFailure());
+    }
+  }
+
+  @override
   Future<Either<Failure, ForecastEntity>> getForecast(
     String city, {
-    CancelToken? cancelToken,
+    CancellationToken? cancelToken,
   }) async {
     if (await networkInfo.isConnected) {
       try {

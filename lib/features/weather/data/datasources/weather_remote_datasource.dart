@@ -1,26 +1,38 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import '../../../../core/error/exceptions.dart';
-import '../../../../core/utils/constants.dart';
-import '../models/weather_model.dart';
-import '../models/forecast_model.dart';
+import 'package:weathernow/core/error/exceptions.dart';
+import 'package:weathernow/core/usecase/cancellation_token.dart';
+import 'package:weathernow/core/utils/constants.dart';
+import 'package:weathernow/features/weather/data/models/weather_model.dart';
+import 'package:weathernow/features/weather/data/models/forecast_model.dart';
 
 abstract class WeatherRemoteDataSource {
-  Future<WeatherModel> getCurrentWeather(String city, {CancelToken? cancelToken});
-  Future<ForecastModel> getForecast(String city, {CancelToken? cancelToken});
+  Future<WeatherModel> getCurrentWeather(String city, {CancellationToken? cancelToken});
+  Future<ForecastModel> getForecast(String city, {CancellationToken? cancelToken});
 }
 
 class WeatherRemoteDataSourceImpl implements WeatherRemoteDataSource {
   final Dio dio;
   WeatherRemoteDataSourceImpl(this.dio);
 
+  /// Bridges the domain-layer CancellationToken to a real Dio CancelToken —
+  /// this is the one place that conversion happens, so nothing above the
+  /// data layer needs to know Dio's cancellation API exists.
+  CancelToken _bridge(CancellationToken? cancelToken) {
+    final dioToken = CancelToken();
+    cancelToken?.onCancel(() {
+      if (!dioToken.isCancelled) dioToken.cancel();
+    });
+    return dioToken;
+  }
+
   @override
-  Future<WeatherModel> getCurrentWeather(String city, {CancelToken? cancelToken}) async {
+  Future<WeatherModel> getCurrentWeather(String city, {CancellationToken? cancelToken}) async {
     try {
       final response = await dio.get(
         ApiEndpoints.currentWeather,
         queryParameters: {'q': city, 'units': 'metric'},
-        cancelToken: cancelToken,
+        cancelToken: _bridge(cancelToken),
       );
       return WeatherModel.fromJson(response.data as Map<String, dynamic>);
     } on DioException catch (e) {
@@ -29,12 +41,12 @@ class WeatherRemoteDataSourceImpl implements WeatherRemoteDataSource {
   }
 
   @override
-  Future<ForecastModel> getForecast(String city, {CancelToken? cancelToken}) async {
+  Future<ForecastModel> getForecast(String city, {CancellationToken? cancelToken}) async {
     try {
       final response = await dio.get(
         ApiEndpoints.forecast,
         queryParameters: {'q': city, 'units': 'metric'},
-        cancelToken: cancelToken,
+        cancelToken: _bridge(cancelToken),
       );
       return ForecastModel.fromJson(response.data as Map<String, dynamic>);
     } on DioException catch (e) {

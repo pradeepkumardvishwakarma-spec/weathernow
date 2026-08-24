@@ -1,4 +1,4 @@
-import '../../domain/entities/forecast_entity.dart';
+import 'package:weathernow/features/weather/domain/entities/forecast_entity.dart';
 
 class ForecastSlotModel extends ForecastSlotEntity {
   const ForecastSlotModel({

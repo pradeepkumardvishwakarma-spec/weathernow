@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/di/injection_container.dart';
-import '../../../weather/data/datasources/weather_local_datasource.dart';
-import '../../../weather/domain/entities/weather_entity.dart';
-import '../../../weather/domain/usecases/get_current_weather.dart';
+import 'package:weathernow/core/di/injection_container.dart';
+import 'package:weathernow/features/weather/domain/entities/weather_entity.dart';
+import 'package:weathernow/features/weather/domain/usecases/get_cached_weather.dart';
+import 'package:weathernow/features/weather/domain/usecases/get_current_weather.dart';
 
 /// Per the spec: favorites should "read from local cache first, refresh
 /// in the background." This is intentionally different from the Home
@@ -16,12 +16,11 @@ class FavoritePreviewNotifier extends StateNotifier<AsyncValue<WeatherEntity>> {
   }
 
   Future<void> _loadCacheThenRefresh() async {
-    try {
-      final cached = await sl<WeatherLocalDataSource>().getCachedWeather(city);
-      state = AsyncValue.data(cached);
-    } catch (_) {
-      // No cache yet — fall through to a real fetch below with a loading state.
-    }
+    final cachedResult = await sl<GetCachedWeather>().call(city);
+    cachedResult.fold(
+      (_) {}, // No cache yet — fall through to a real fetch below with a loading state.
+      (cached) => state = AsyncValue.data(cached),
+    );
 
     final result = await sl<GetCurrentWeather>().call(GetCurrentWeatherParams(city: city));
     result.fold(
