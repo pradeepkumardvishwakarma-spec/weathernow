@@ -1,4 +1,5 @@
 # AI Assistance Notes
+# These are the issues where AI got wrong and I caught it up and solved it by giving below prompts
 
 ## Real example 1: raw Dio exception text leaking into the UI on a 401
 
@@ -127,7 +128,7 @@ This project's own `CLAUDE.md` states plainly: "the domain layer must never
 import Flutter, Dio, or Hive" and "widgets must never call a datasource or
 Dio directly." Both were violated from early on, and — worth being honest
 about — an earlier "senior code review" prompt in this same session (see
-`docs/ai/PROMPTS.md` entry #8) explicitly claimed "architecture
+`docs/ai/PROMPTS.md` entry #13) explicitly claimed "architecture
 boundaries... had no violations found." That was wrong; the review just
 wasn't asked a targeted enough question to catch it. A broad "review
 everything" prompt missed what a specific "does X depend on Y?" question
@@ -152,6 +153,98 @@ cancellation API exists. Added a new domain use case `GetCachedWeather`
 and a `WeatherRepository.getCachedWeatherOnly()` method so the favorites
 preview provider reads cached weather through the proper use case →
 repository chain instead of calling a datasource directly.
+
+---
+
+## Real example 4: AI made unapproved changes from a vague bug report
+
+This one is different from the other three — not a Flutter/Dart technical
+mistake, but a process mistake worth documenting for the same reason the
+brief asks for this section: catching the AI doing the wrong thing and
+correcting it is exactly the judgment being assessed.
+
+**What the AI suggested**
+
+Given the report "the application is not working on 3G it should work in
+low latency as well" — a symptom, not a named change — Claude Code
+directly edited two files (parallelized the weather/forecast fetch in
+`weather_provider.dart`, bumped `dio_client.dart`'s `receiveTimeout` to
+60s) without proposing the change first or asking for confirmation.
+
+**Why it was wrong**
+
+A vague report doesn't specify which fix is correct, and applying a
+plausible-sounding fix without validating it against the actual symptom
+risks shipping an unverified change — which is exactly what happened:
+the change didn't resolve the issue, and had to be reverted.
+
+**How I caught it**
+
+Immediately, in the same turn: "what you did. also you are directly doing
+the changes and not letting me know. first ask me then add any solution."
+
+**What I changed**
+
+Reverted both files to their prior committed state. Established a
+standing rule for the rest of the session (and recorded in this project's
+AI memory for future sessions): propose the diagnosis and fix in chat for
+any ambiguous bug/symptom report, and wait for explicit confirmation
+before editing files — only act immediately when a prompt names the exact
+change to make (e.g. "add 30 sec for request timeout" is specific enough
+to act on directly; "make it work better on 3G" is not).
+
+---
+
+## Real example 5: tests that had never actually been run had real bugs
+
+**What the AI suggested**
+
+`test/data/weather_repository_impl_test.dart` and
+`test/presentation/search_home_screen_test.dart` looked, on inspection,
+like correct, working tests — reasonable mock setups, sensible
+assertions, a widget test asserting the no-raw-error-string guarantee.
+
+**Why it was wrong**
+
+Running them for the first time (`flutter test`) immediately failed 5 of
+14, none of them for reasons a code review would have caught:
+1. Mocktail's `any()` matcher requires `registerFallbackValue()` for any
+   custom type (`WeatherModel`, `ForecastModel`) — missing entirely, and
+   its absence corrupted mocktail's internal state enough to make the
+   *next* test's failure message look unrelated to the real cause.
+2. The widget test never initialized Hive, but the screen under test
+   calls `Hive.box(...)` directly in `initState()` — instant crash on
+   build.
+3. A fake notifier passed `throw UnimplementedError()` directly as a
+   constructor argument, intending it as "this will never be touched" —
+   but Dart evaluates constructor arguments eagerly, so it threw on
+   construction, unconditionally, regardless of whether the field was
+   ever read.
+4. The same screen reads a second provider (`favoritesProvider`)
+   unconditionally in `build()`, which the test never overrode — it hit
+   real, unregistered dependency injection and threw.
+
+None of this was visible from reading the test files — every one of
+these only surfaces by actually executing the suite.
+
+**How I caught it**
+
+Not by me — by the user running `flutter test` and pasting the real
+terminal output back, across four separate rounds as each fix surfaced
+the next failure underneath it.
+
+**What I changed**
+
+Fixed all four, one at a time, each confirmed against real output rather
+than assumed correct from re-reading the code:
+- Added `setUpAll(() { registerFallbackValue(...); })` for both model types.
+- Added real temporary-directory Hive setup/teardown to the widget test.
+- Replaced the eager `throw` with harmless `mocktail` mock instances.
+- Added a `FakeFavoritesNotifier` override alongside the existing
+  `FakeWeatherNotifier` one.
+
+The broader lesson, worth being able to say plainly: a test that has
+never been run isn't verified — it's just code shaped like a test.
 
 ---
 

@@ -1,11 +1,53 @@
 # WeatherNow
 
-A small weather app built on the OpenWeatherMap API — take-home challenge submission for Webol's Senior Flutter Developer role.
+A small weather app built on the OpenWeatherMap API which shows current weather details of searched location.
+
+## What This App Covers
+
+A plain checklist of what's actually built and working, in simple terms.
+
+**Weather**
+- Search any city and see the current temperature, weather description, humidity, wind, and an icon.
+- See the next 5 days of forecast under the current weather.
+- Tap a day in the forecast to see a morning/afternoon/evening breakdown for that day.
+- Going back from that detail screen does not reload anything — it's instant.
+
+**Favorites**
+- Save a city as a favorite with one tap (the star icon).
+- Favorites are saved on the device and are still there after closing and reopening the app.
+- The Favorites list shows each city's weather right away from a saved copy, then quietly updates it in the background.
+- Swipe a favorite to remove it.
+
+**Offline behavior**
+- If there's no internet, the app shows the last weather it saved for that city instead of an error, with a label like "Updated 2h ago" so it's clear the data isn't live.
+- If there's no internet AND no saved data for that city yet, it shows a simple, friendly message with a Retry button — never a technical error.
+
+**Units**
+- A °C/°F switch in Settings.
+- Flipping it updates every screen immediately, with no reloading.
+- The choice is remembered after closing and reopening the app.
+
+**Navigation**
+- Three tabs: Search/Home, Favorites, Settings.
+- On Home, pressing back asks "Are you sure you want to exit?" before closing the app.
+- On Favorites/Settings, pressing back returns to Home instead of exiting.
+
+**Behind the scenes (in simple terms)**
+- The code is split into three clear layers (UI, business logic, data) so each piece can be tested and changed on its own — this is called Clean Architecture.
+- Riverpod is used to manage what's shown on screen and when it updates.
+- Typing in the search box waits half a second after you stop typing before searching, so it doesn't spam the server with a request for every letter.
+- If you search a new city before the last search finished, the old, now-unwanted request is cancelled instead of racing the new one.
+- The app talks to the internet through one central networking setup with timeouts, so a slow or broken connection can't freeze the app.
+- The weather API key is kept out of the code entirely and loaded from a separate file that's never uploaded to GitHub.
+- Error messages shown to the user are always short and friendly — the app never shows a raw technical error on screen.
+- Weather icons are cached so they don't re-download every time you scroll.
+- The app has been checked for common security issues (see "Security notes" below) and profiled for performance issues (see "Performance notes" below), not just assumed to be fine.
+- Automated tests exist for the trickiest logic (online/offline switching, error handling, day-by-day forecast grouping) rather than trying to test everything.
 
 ## Setup
 
-1. **Get an API key**: sign up free at https://home.openweathermap.org/users/sign_up (note: free-tier keys can take up to ~2 hours to activate after signup).
-2. **Add the key**: copy `assets/env/.env.example` (or edit `assets/env/.env` directly) and set:
+1. **Got an API key from**: sign up free at https://home.openweathermap.org/users/sign_up
+2. **Added the key**: copy `assets/env/.env.example` (or edit `assets/env/.env` directly) and set:
    ```
    OPEN_WEATHER_API_KEY=your_real_key_here
    OPEN_WEATHER_BASE_URL=https://api.openweathermap.org
@@ -71,6 +113,20 @@ Profiled two things reported during development, both with real data rather than
 
 - **Skipped-frames warning at cold start** (`Skipped 90 frames!` from Choreographer, reproduced in both debug and `--profile` builds). Traced to Flutter's well-known first-frame shader-compilation cost — the GPU compiling shaders the first time it hits a new draw operation (Material elevation/shadows, gradients, text) — plus native app-init work (`Hive.initFlutter`, opening boxes, DI setup) that runs before `runApp()`, all before Flutter schedules its first frame. Opening the three Hive boxes in `main.dart` was switched from three sequential `await`s to one `Future.wait` (a real, if small, win on that part of cold start), but the bulk of the delay is shader compilation, which needs an SkSL warm-up step (`--cache-sksl` on a real device, bundled at build time) to fully address — not attempted here, flagged instead as a known follow-up.
 - **APK size** — a plain `flutter build apk` (no `--split-per-abi`) came out to ~34MB, which looked high at first glance. Ran `flutter build apk --analyze-size --target-platform=android-arm64` to get a real breakdown instead of guessing: this app's own code (`package:weathernow`) is **77 KB** of the total — the rest is the Flutter engine/framework baseline (`package:flutter` alone is 3MB) that every Flutter app pays per architecture, and dependencies are all proportionate (hive 73KB, go_router 65KB, dio 51KB, riverpod 43KB). A single-ABI (arm64) release build is **17.7MB**; the "34MB" figure was simply the universal APK bundling three architectures' native code (arm64-v8a, armeabi-v7a, x86_64) into one file — not a regression. For real distribution, `flutter build apk --split-per-abi` or `flutter build appbundle` (what Google Play actually wants — it auto-delivers only the architecture each device needs) avoids shipping that multi-ABI bloat to every user.
+
+## Security notes
+
+The brief calls out security as something reviewers will specifically check, so beyond the one-line summary above, here's what was actually verified and fixed rather than just claimed:
+
+- **Fixed**: the raw-401-error bug (see `docs/ai/AI_REVIEW.md`) wasn't just a UX problem — Dio's raw internal exception message can echo back the full request URL, including the API key query parameter. Forwarding that message to the UI meant the key could end up visible on screen or in a crash report. Fixed by never forwarding `e.message`; the debug-only console log now prints just the HTTP status code, never the full message.
+- **Verified clean**:
+  - The API key never touches source control — lives only in git-ignored `assets/env/.env`, loaded at runtime via `flutter_dotenv`.
+  - No verbose request/response logging interceptor is active (`dio_client.dart` deliberately omits one) — nothing prints the API key to the console during normal operation.
+  - `DioClient`'s `baseUrl` is HTTPS-only; no custom certificate-validation bypass anywhere in the networking code.
+  - No `android:usesCleartextTraffic="true"` override in `AndroidManifest.xml` — Android's secure-by-default (HTTPS-only) behavior is untouched.
+  - No secrets are stored in Hive — only weather cache, favorite city names, and the unit preference.
+  - The UI never displays a raw exception/error string anywhere — only pre-written `Failure.message`s (see `test/presentation/search_home_screen_test.dart`, which explicitly asserts this).
+- **Known gap, disclosed rather than hidden**: the release build has no ProGuard/R8 minification configured (`minifyEnabled` isn't set in `android/app/build.gradle.kts`). Combined with `.env` being bundled as a plain Flutter asset, the API key is technically extractable from a compiled release APK by someone determined enough to unpack it. This is a reasonable tradeoff for a take-home (the brief explicitly says "however you want to handle it" for the key) — a production app would instead proxy weather requests through its own backend so the key never ships to the client at all.
 
 ## What's stubbed / would do differently with more time
 

@@ -8,6 +8,7 @@ It exists so the AI output stays consistent with the assignment constraints with
 
 NON NEGOTIABLE CONSTRAINTS
 
+- Keep UI, business logic, and data separate
 - Riverpod only for state management.
 - Never suggest Provider, Bloc, GetX, or setState based state for anything beyond truly local widget state such as a TextField focus.
 

@@ -1,15 +1,56 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hive/hive.dart';
+import 'package:mocktail/mocktail.dart';
+import 'package:weathernow/core/utils/constants.dart';
+import 'package:weathernow/features/favorites/domain/repositories/favorites_repository.dart';
+import 'package:weathernow/features/favorites/domain/usecases/manage_favorites.dart';
+import 'package:weathernow/features/favorites/presentation/providers/favorites_provider.dart';
+import 'package:weathernow/features/weather/domain/repositories/weather_repository.dart';
+import 'package:weathernow/features/weather/domain/usecases/get_current_weather.dart';
+import 'package:weathernow/features/weather/domain/usecases/get_forecast.dart';
 import 'package:weathernow/features/weather/presentation/providers/weather_provider.dart';
 import 'package:weathernow/features/weather/presentation/providers/weather_state.dart';
 import 'package:weathernow/features/weather/presentation/screens/search_home_screen.dart';
 
+class MockWeatherRepository extends Mock implements WeatherRepository {}
+
+class MockFavoritesRepository extends Mock implements FavoritesRepository {}
+
+// search_home_screen.dart reads favoritesProvider unconditionally at the
+// top of build() (for the star-icon state) regardless of which
+// WeatherState is being tested - so it needs overriding here too, same
+// reasoning as FakeWeatherNotifier: avoid real DI/GetIt entirely.
+// Overriding refresh() to a no-op means the mock use cases below are
+// constructed but never actually invoked.
+class FakeFavoritesNotifier extends FavoritesNotifier {
+  FakeFavoritesNotifier()
+      : super(
+          getFavorites: GetFavorites(MockFavoritesRepository()),
+          addFavoriteUseCase: AddFavorite(MockFavoritesRepository()),
+          removeFavoriteUseCase: RemoveFavorite(MockFavoritesRepository()),
+        );
+
+  @override
+  Future<void> refresh() async {}
+}
+
 // A fake notifier so the widget test doesn't touch DI/Hive/Dio at all —
 // it only checks that a given WeatherState renders the right UI.
+// getCurrentWeather/getForecast are never actually called here (searchCity
+// and retry are both overridden to no-ops below), so a mock with no
+// stubs configured is a safe, harmless placeholder — unlike
+// `throw UnimplementedError()` passed directly as an argument, which
+// evaluates eagerly and throws immediately on construction, before the
+// constructor body even runs.
 class FakeWeatherNotifier extends WeatherNotifier {
   FakeWeatherNotifier(WeatherState initial)
-      : super(getCurrentWeather: throw UnimplementedError(), getForecast: throw UnimplementedError()) {
+      : super(
+          getCurrentWeather: GetCurrentWeather(MockWeatherRepository()),
+          getForecast: GetForecast(MockWeatherRepository()),
+        ) {
     state = initial;
   }
 
@@ -21,6 +62,24 @@ class FakeWeatherNotifier extends WeatherNotifier {
 }
 
 void main() {
+  // SearchHomeScreen.initState() reads Hive.box(HiveBoxes.settings) directly
+  // (to restore the last-searched city) - the box has to actually exist for
+  // the widget to build at all, even though this test never uses that value.
+  late Directory tempDir;
+
+  setUp(() async {
+    tempDir = await Directory.systemTemp.createTemp('search_home_test');
+    Hive.init(tempDir.path);
+    await Hive.openBox(HiveBoxes.settings);
+  });
+
+  tearDown(() async {
+    await Hive.deleteFromDisk();
+    if (await tempDir.exists()) {
+      await tempDir.delete(recursive: true);
+    }
+  });
+
   testWidgets('shows a friendly retry message, never a raw exception string', (tester) async {
     const errorState = WeatherState(
       status: WeatherStatus.error,
@@ -31,6 +90,7 @@ void main() {
       ProviderScope(
         overrides: [
           weatherProvider.overrideWith((ref) => FakeWeatherNotifier(errorState)),
+          favoritesProvider.overrideWith((ref) => FakeFavoritesNotifier()),
         ],
         child: const MaterialApp(home: SearchHomeScreen()),
       ),
