@@ -30,8 +30,7 @@ class FavoritesNotifier extends StateNotifier<List<FavoriteCityEntity>> {
     await refresh();
   }
 
-  bool contains(String city) =>
-      state.any((f) => f.cityName.toLowerCase() == city.toLowerCase());
+  bool contains(String city) => state.any((f) => f.matchesCityName(city));
 }
 
 final favoritesProvider = StateNotifierProvider<FavoritesNotifier, List<FavoriteCityEntity>>((ref) {

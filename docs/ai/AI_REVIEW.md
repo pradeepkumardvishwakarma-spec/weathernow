@@ -433,6 +433,43 @@ search succeeded — never on failure.
 
 ---
 
+## Real example 12: the fix for the forecast-order bug was itself still incomplete
+
+**What the AI suggested**
+
+After real example 10 (Evening's internal order), `evening` was rebuilt as `hour >= 17` slots
+concatenated with `hour < 5` slots — correctly ordered *within* that one section
+(`18:00, 21:00, 00:00, 03:00`). But the section itself stayed in its original position: the
+screen always rendered Morning, then Afternoon, then Evening, in that fixed order.
+
+**Why it was wrong**
+
+Fixing the order inside one section didn't fix the order of the *whole day*. For a full day of
+8 slots, the actual row order was still `06:00, 09:00, 12:00, 15:00, 18:00, 21:00, 00:00, 03:00`
+— starting at 06:00 and pushing the pre-dawn hours to the very bottom, even though 00:00/03:00
+chronologically come *before* Morning, not after Evening. The first fix treated the symptom
+(wrong order inside Evening) without addressing the actual cause (Evening was structurally the
+wrong place for those hours to live at all).
+
+**How I caught it**
+
+Not by me — the user compared two different days side by side and noticed the inconsistency
+directly: "also one major bug has been found in tommorows weather i will see data from 00:00
+till 23:00 pm divided into 3 hrs correct but in wednesday i am seeing 06:00, 09:00, 12:00,
+15:00, 18:00, 21:00, 00:00 and 03:00. idealy it should start with 00:00 and go upto 21:00 for
+tommorrow what is your take??"
+
+**What I changed**
+
+Split what was one "Evening" bucket into two real sections — a new **Night** (00:00-04:59),
+placed *first*, and **Evening** (17:00 onward), placed last — giving true chronological order:
+Night → Morning → Afternoon → Evening, i.e. `00:00, 03:00, 06:00, 09:00, 12:00, 15:00, 18:00,
+21:00`. The lesson: a locally-correct fix (right order within one bucket) isn't the same as a
+globally-correct one (right order across the whole screen) — worth checking the fix against the
+full picture, not just the specific case that was reported.
+
+---
+
 ## Categories worth watching for while you build
 
 (Kept as a general reference — useful if you hit a further example before submitting.)

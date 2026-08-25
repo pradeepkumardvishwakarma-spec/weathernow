@@ -1,13 +1,12 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hive/hive.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:weathernow/core/utils/constants.dart';
 import 'package:weathernow/features/favorites/domain/repositories/favorites_repository.dart';
 import 'package:weathernow/features/favorites/domain/usecases/manage_favorites.dart';
 import 'package:weathernow/features/favorites/presentation/providers/favorites_provider.dart';
+import 'package:weathernow/features/settings/domain/repositories/settings_repository.dart';
+import 'package:weathernow/features/settings/presentation/providers/settings_provider.dart';
 import 'package:weathernow/features/weather/domain/repositories/weather_repository.dart';
 import 'package:weathernow/features/weather/domain/usecases/get_current_weather.dart';
 import 'package:weathernow/features/weather/domain/usecases/get_forecast.dart';
@@ -18,6 +17,8 @@ import 'package:weathernow/features/weather/presentation/screens/search_home_scr
 class MockWeatherRepository extends Mock implements WeatherRepository {}
 
 class MockFavoritesRepository extends Mock implements FavoritesRepository {}
+
+class MockSettingsRepository extends Mock implements SettingsRepository {}
 
 // search_home_screen.dart reads favoritesProvider unconditionally at the
 // top of build() (for the star-icon state) regardless of which
@@ -55,31 +56,13 @@ class FakeWeatherNotifier extends WeatherNotifier {
   }
 
   @override
-  Future<void> searchCity(String city) async {}
+  Future<bool> searchCity(String city) async => false;
 
   @override
   void retry() {}
 }
 
 void main() {
-  // SearchHomeScreen.initState() reads Hive.box(HiveBoxes.settings) directly
-  // (to restore the last-searched city) - the box has to actually exist for
-  // the widget to build at all, even though this test never uses that value.
-  late Directory tempDir;
-
-  setUp(() async {
-    tempDir = await Directory.systemTemp.createTemp('search_home_test');
-    Hive.init(tempDir.path);
-    await Hive.openBox(HiveBoxes.settings);
-  });
-
-  tearDown(() async {
-    await Hive.deleteFromDisk();
-    if (await tempDir.exists()) {
-      await tempDir.delete(recursive: true);
-    }
-  });
-
   testWidgets('shows a friendly retry message, never a raw exception string', (tester) async {
     const errorState = WeatherState(
       status: WeatherStatus.error,
@@ -91,6 +74,11 @@ void main() {
         overrides: [
           weatherProvider.overrideWith((ref) => FakeWeatherNotifier(errorState)),
           favoritesProvider.overrideWith((ref) => FakeFavoritesNotifier()),
+          // SearchHomeScreen.initState() reads settingsProvider.notifier.lastCity —
+          // override with a mocked repository so it never touches real DI/Hive.
+          // The default `null` lastCity is exactly what this test wants (no
+          // auto-search on open).
+          settingsProvider.overrideWith((ref) => SettingsNotifier(MockSettingsRepository())),
         ],
         child: const MaterialApp(home: SearchHomeScreen()),
       ),

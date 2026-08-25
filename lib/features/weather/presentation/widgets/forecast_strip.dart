@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart' as intl;
 import 'package:go_router/go_router.dart';
 import 'package:weathernow/core/utils/constants.dart';
+import 'package:weathernow/features/settings/domain/entities/settings_entity.dart';
+import 'package:weathernow/features/settings/presentation/providers/settings_provider.dart';
 import 'package:weathernow/features/weather/domain/entities/forecast_entity.dart';
 import 'package:weathernow/features/weather/presentation/widgets/weather_icon.dart';
 
@@ -9,12 +12,13 @@ import 'package:weathernow/features/weather/presentation/widgets/weather_icon.da
 /// out at any time (lazy build), rather than inflating all 5 up front —
 /// matters more once this is a longer list, and keeps the pattern
 /// consistent with how Favorites (a longer, growing list) is built.
-class ForecastStrip extends StatelessWidget {
+class ForecastStrip extends ConsumerWidget {
   final ForecastEntity forecast;
   const ForecastStrip({super.key, required this.forecast});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(settingsProvider);
     return SizedBox(
       height: 140,
       child: ListView.builder(
@@ -38,7 +42,7 @@ class ForecastStrip extends StatelessWidget {
                 children: [
                   Text(intl.DateFormat.E().format(day.date), style: const TextStyle(fontWeight: FontWeight.w600)),
                   WeatherIcon(iconCode: day.iconCode, size: 48),
-                  Text('${day.avgTemperature.round()}°'),
+                  Text('${convertTemp(day.avgTemperature, settings.unit).round()}${unitSuffix(settings.unit)}'),
                 ],
               ),
             ),

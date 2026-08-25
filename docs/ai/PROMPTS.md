@@ -243,19 +243,7 @@ opening at all in an emulator review environment).
 
 ---
 
-### 24. Dependency hygiene sweep
-
-**Prompt:**
-> is there anything in project whcih i need to remove or which is of no use unncesary there
-> in file??
->
-> build_runner we use for generating tests??
->
-> remove then
-
----
-
-### 25. Forecast Detail logic walkthrough, and an ordering bug found along the way
+### 24. Forecast Detail logic walkthrough, and an ordering bug found along the way
 
 **Prompt:**
 > what is the logic for showing forecast details??
@@ -269,7 +257,7 @@ opening at all in an emulator review environment).
 
 ---
 
-### 26. "Last searched city" bug after an offline search — traced and fixed
+### 25. "Last searched city" bug after an offline search — traced and fixed
 
 **Prompt:**
 > so what is happening when i am offline and search new delhi it will not show because i have
@@ -287,11 +275,52 @@ opening at all in an emulator review environment).
 
 ---
 
-### 27. Search input validation — max length only, no character restrictions
+### 26. Search input validation — max length only, no character restrictions
 
 **Prompt:**
 > there will be any validation to search box means any symbol should not there, any length
 > wise check what you say??
 >
 > maxlength guard add
+
+---
+
+### 27. Removing `setState`, and a deeper forecast-ordering bug the first fix had missed
+
+**Prompt:**
+> remove setstate and use riverpod
+>
+> also one major bug has been found in tommorows weather i will see data from 00:00 till 23:00
+> pm divided into 3 hrs correct but in wednesday i am seeing 06:00, 09:00, 12:00, 15:00, 18:00,
+> 21:00, 00:00 and 03:00. idealy it should start with 00:00 and go upto 21:00 for tommorrow what
+> is your take??
+
+---
+
+### 28. Moving business logic into the correct clean-architecture layer
+
+**Prompt:**
+> but all logic related things are there in domain part correct??
+>
+> move into domain part or according to clean architecture whever it should resides add there
+> only. it is a big change let me know first then do the changes affected file and all let me
+> know first
+>
+> start with smaller changes first
+>
+> go with change no 2
+>
+> go for first change
+
+---
+
+### 29. Final architecture and state-management verification before submission
+
+**Prompt:**
+> read complete project again and check if clean architecture is being followed or not
+>
+> state management properly used, setstate is not there, only needed widget is updated and not
+> complete build method all this things 
+>
+> lazy loading is there or not??
 

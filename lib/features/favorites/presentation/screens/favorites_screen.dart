@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:weathernow/core/theme/app_theme.dart';
 import 'package:weathernow/core/utils/constants.dart';
 import 'package:weathernow/features/weather/presentation/widgets/weather_icon.dart';
+import 'package:weathernow/features/settings/domain/entities/settings_entity.dart';
 import 'package:weathernow/features/settings/presentation/providers/settings_provider.dart';
 import 'package:weathernow/core/utils/time_ago.dart';
 import 'package:weathernow/features/favorites/presentation/providers/favorites_provider.dart';

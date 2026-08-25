@@ -1,17 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show MaxLengthEnforcement;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:weathernow/core/utils/debouncer.dart';
 
-class CitySearchBar extends StatefulWidget {
+// Whether the field currently has text - drives the clear (x) button's
+// visibility. Only one CitySearchBar exists in this app (Search/Home), so a
+// single autoDispose provider is fine; it resets when the widget unmounts.
+final _hasTextProvider = StateProvider.autoDispose<bool>((ref) => false);
+
+class CitySearchBar extends ConsumerStatefulWidget {
   final String? initialCity;
   final ValueChanged<String> onSubmittedCity;
 
   const CitySearchBar({super.key, this.initialCity, required this.onSubmittedCity});
 
   @override
-  State<CitySearchBar> createState() => _CitySearchBarState();
+  ConsumerState<CitySearchBar> createState() => _CitySearchBarState();
 }
 
-class _CitySearchBarState extends State<CitySearchBar> {
+class _CitySearchBarState extends ConsumerState<CitySearchBar> {
   late final TextEditingController _controller;
   final _debouncer = Debouncer(delay: const Duration(milliseconds: 600));
 
@@ -19,6 +26,13 @@ class _CitySearchBarState extends State<CitySearchBar> {
   void initState() {
     super.initState();
     _controller = TextEditingController(text: widget.initialCity ?? '');
+    if (_controller.text.isNotEmpty) {
+      // Deferred to after the first frame — ref.read(...notifier).state
+      // triggers a rebuild, which can't happen mid-initState.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.read(_hasTextProvider.notifier).state = true;
+      });
+    }
   }
 
   @override
@@ -29,6 +43,7 @@ class _CitySearchBarState extends State<CitySearchBar> {
   }
 
   void _onChanged(String value) {
+    ref.read(_hasTextProvider.notifier).state = value.isNotEmpty;
     // Debounced so we don't fire a network call on every keystroke —
     // only after the user pauses typing for 600ms.
     _debouncer.run(() {
@@ -38,8 +53,14 @@ class _CitySearchBarState extends State<CitySearchBar> {
     });
   }
 
+  void _clear() {
+    _controller.clear();
+    ref.read(_hasTextProvider.notifier).state = false;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final hasText = ref.watch(_hasTextProvider);
     return Padding(
       padding: const EdgeInsets.all(16),
       child: TextField(
@@ -59,12 +80,7 @@ class _CitySearchBarState extends State<CitySearchBar> {
           counterText: '',
           hintText: 'Search for a city…',
           prefixIcon: const Icon(Icons.search),
-          suffixIcon: _controller.text.isNotEmpty
-              ? IconButton(
-                  icon: const Icon(Icons.clear),
-                  onPressed: () => setState(() => _controller.clear()),
-                )
-              : null,
+          suffixIcon: hasText ? IconButton(icon: const Icon(Icons.clear), onPressed: _clear) : null,
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         ),
       ),

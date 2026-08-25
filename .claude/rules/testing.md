@@ -6,6 +6,9 @@ A handful of tests that matter beats 100% coverage on trivial code. For this pro
   (`test/data/weather_repository_impl_test.dart`).
 - Forecast day-grouping logic — 3-hour slots → daily buckets, capped at 5 days
   (`test/data/forecast_model_test.dart`).
+- Time-of-day sectioning — Night/Morning/Afternoon/Evening boundaries and chronological
+  section order (`test/domain/forecast_entity_test.dart`, covering
+  `DailyForecastEntity.sectionsByTimeOfDay`).
 - Local-datasource corruption handling — a malformed/unreadable Hive entry must be treated as
   "no cache" (`CacheException`), not let an unrelated exception escape uncaught
   (`test/data/favorites_local_datasource_test.dart`, and the same defensive-cast pattern in

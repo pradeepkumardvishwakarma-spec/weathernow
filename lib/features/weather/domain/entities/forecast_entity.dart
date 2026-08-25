@@ -36,8 +36,37 @@ class DailyForecastEntity extends Equatable {
     required this.slots,
   });
 
+  /// Groups [slots] into Night (00:00-04:59) / Morning (05:00-11:59) /
+  /// Afternoon (12:00-16:59) / Evening (17:00-23:59), in that chronological
+  /// order - so a full day reads 00:00 through 21:00 top to bottom. Only
+  /// non-empty sections are included (e.g. a partial "today" fetched mid-
+  /// afternoon won't show an empty Night/Morning header).
+  List<TimeOfDaySection> get sectionsByTimeOfDay {
+    final night = slots.where((s) => s.dateTime.hour < 5).toList();
+    final morning = slots.where((s) => s.dateTime.hour >= 5 && s.dateTime.hour < 12).toList();
+    final afternoon = slots.where((s) => s.dateTime.hour >= 12 && s.dateTime.hour < 17).toList();
+    final evening = slots.where((s) => s.dateTime.hour >= 17).toList();
+
+    return [
+      if (night.isNotEmpty) TimeOfDaySection(label: 'Night', slots: night),
+      if (morning.isNotEmpty) TimeOfDaySection(label: 'Morning', slots: morning),
+      if (afternoon.isNotEmpty) TimeOfDaySection(label: 'Afternoon', slots: afternoon),
+      if (evening.isNotEmpty) TimeOfDaySection(label: 'Evening', slots: evening),
+    ];
+  }
+
   @override
   List<Object?> get props => [date, avgTemperature, description, iconCode, slots];
+}
+
+/// One time-of-day group of slots, e.g. "Morning" with its 2-3 readings.
+class TimeOfDaySection extends Equatable {
+  final String label;
+  final List<ForecastSlotEntity> slots;
+  const TimeOfDaySection({required this.label, required this.slots});
+
+  @override
+  List<Object?> get props => [label, slots];
 }
 
 class ForecastEntity extends Equatable {

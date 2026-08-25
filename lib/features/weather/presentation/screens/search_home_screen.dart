@@ -48,9 +48,8 @@ class _SearchHomeScreenState extends ConsumerState<SearchHomeScreen> {
   Widget build(BuildContext context) {
     final state = ref.watch(weatherProvider);
     final favoritesNotifier = ref.read(favoritesProvider.notifier);
-    final isFav = state.weather != null && ref.watch(favoritesProvider).any(
-          (f) => f.cityName.toLowerCase() == state.weather!.cityName.toLowerCase(),
-        );
+    final isFav = state.weather != null &&
+        ref.watch(favoritesProvider).any((f) => f.matchesCityName(state.weather!.cityName));
 
     return Scaffold(
       // The search bar sits at the top, above where the keyboard covers -

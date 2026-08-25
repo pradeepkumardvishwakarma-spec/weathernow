@@ -41,14 +41,3 @@ class SettingsNotifier extends StateNotifier<SettingsEntity> {
 final settingsProvider = StateNotifierProvider<SettingsNotifier, SettingsEntity>((ref) {
   return SettingsNotifier(sl<SettingsRepository>());
 });
-
-/// Helper used by any widget displaying a temperature so the
-/// Celsius<->Fahrenheit conversion lives in exactly one place.
-double convertTemp(double celsius, TemperatureUnit unit) {
-  if (unit == TemperatureUnit.fahrenheit) {
-    return celsius * 9 / 5 + 32;
-  }
-  return celsius;
-}
-
-String unitSuffix(TemperatureUnit unit) => unit == TemperatureUnit.fahrenheit ? '°F' : '°C';
