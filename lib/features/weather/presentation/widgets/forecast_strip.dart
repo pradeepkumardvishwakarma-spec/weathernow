@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' as intl;
 import 'package:go_router/go_router.dart';
+import 'package:weathernow/core/utils/constants.dart';
 import 'package:weathernow/features/weather/domain/entities/forecast_entity.dart';
 import 'package:weathernow/features/weather/presentation/widgets/weather_icon.dart';
 
@@ -15,7 +16,7 @@ class ForecastStrip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 130,
+      height: 140,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -23,9 +24,9 @@ class ForecastStrip extends StatelessWidget {
         itemBuilder: (context, index) {
           final day = forecast.dailyForecasts[index];
           return GestureDetector(
-            onTap: () => context.push('/forecast-detail', extra: day),
+            onTap: () => context.push(AppRoutes.forecastDetail, extra: day),
             child: Container(
-              width: 90,
+              width: 96,
               margin: const EdgeInsets.symmetric(horizontal: 6),
               padding: const EdgeInsets.symmetric(vertical: 10),
               decoration: BoxDecoration(
@@ -36,7 +37,7 @@ class ForecastStrip extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   Text(intl.DateFormat.E().format(day.date), style: const TextStyle(fontWeight: FontWeight.w600)),
-                  WeatherIcon(iconCode: day.iconCode, size: 36),
+                  WeatherIcon(iconCode: day.iconCode, size: 48),
                   Text('${day.avgTemperature.round()}°'),
                 ],
               ),

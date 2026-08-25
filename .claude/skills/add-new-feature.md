@@ -48,8 +48,9 @@ else builds against. Rules (see `rules/architecture.md`):
 
 Then `repositories/<feature>_repository.dart` — an abstract class listing the methods
 presentation will need. Full tier: methods return `Future<Either<Failure, T>>` and accept
-a `CancelToken?`. Simple/Medium tier: plain `Future<T>` is fine (see `settings_repository.dart`
-for the smallest real example).
+a `CancelToken?`. Simple/Medium tier: plain `Future<T>` is fine — `settings_repository.dart`
+is the smallest real example of the abstract interface, `settings_repository_impl.dart` its
+implementation.
 
 ## Step 3 — data layer
 
@@ -58,7 +59,9 @@ for the smallest real example).
   escape) and `<feature>_local_datasource.dart` (Hive reads/writes, throws `CacheException`
   on miss/corruption — see `weather_local_datasource.dart` for the defensive-cast pattern
   on cache reads, since cached data can't be assumed well-formed the way a fresh API
-  response can).
+  response can). Any new Hive box name, API endpoint path, or other structural string this
+  layer needs goes in `core/utils/constants.dart` (`HiveBoxes`/`ApiEndpoints`/etc.) — not typed
+  inline in the datasource.
 - `repositories/<feature>_repository_impl.dart` implements the domain interface. This is
   the **only** place that translates data-layer `Exception`s into domain `Failure`s
   (Full tier) — see `weather_repository_impl.dart` for the online/offline branching
@@ -90,8 +93,10 @@ Never instantiate a repository/datasource inline inside a widget or provider —
 - `StateNotifier` + provider in `presentation/providers/`. Decide `.autoDispose` vs
   persistent per `riverpod-specialist`'s rule: transient/per-session state is
   `.autoDispose`; anything that must survive navigating away is not.
-- If it needs a screen, add the route in `core/router/app_router.dart`, and if it needs a
-  bottom-nav tab, add a `NavigationDestination` in `core/router/app_shell.dart`.
+- If it needs a screen, add the path as a named constant to `AppRoutes` in
+  `core/utils/constants.dart` first, then reference it (never a raw string literal) in the
+  `GoRoute` in `core/router/app_router.dart`. If it needs a bottom-nav tab, add a
+  `NavigationDestination` in `core/router/app_shell.dart`, again navigating via `AppRoutes`.
 - Widgets never import Dio/Hive or call a repository/datasource directly — only
   `ref.watch`/`ref.read` on the provider.
 

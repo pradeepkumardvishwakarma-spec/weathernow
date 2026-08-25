@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive/hive.dart';
+import 'package:weathernow/core/theme/app_theme.dart';
 import 'package:weathernow/core/utils/constants.dart';
 import 'package:weathernow/features/favorites/presentation/providers/favorites_provider.dart';
 import 'package:weathernow/features/weather/presentation/providers/weather_provider.dart';
@@ -54,7 +55,7 @@ class _SearchHomeScreenState extends ConsumerState<SearchHomeScreen> {
         actions: [
           if (state.status == WeatherStatus.success && state.weather != null)
             IconButton(
-              icon: Icon(isFav ? Icons.star : Icons.star_border, color: isFav ? Colors.amber : null),
+              icon: Icon(isFav ? Icons.star : Icons.star_border, color: isFav ? AppTheme.starColor : null),
               onPressed: () {
                 final city = state.weather!.cityName;
                 if (isFav) {
@@ -93,7 +94,7 @@ class _SearchHomeScreenState extends ConsumerState<SearchHomeScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.error_outline, size: 48, color: Colors.grey),
+                const Icon(Icons.error_outline, size: 48, color: AppTheme.dangerColor),
                 const SizedBox(height: 12),
                 // Never show raw exception text — Failure.message is already
                 // a friendly, pre-mapped string (see core/error/failures.dart).

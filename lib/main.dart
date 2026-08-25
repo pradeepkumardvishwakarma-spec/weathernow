@@ -6,7 +6,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:weathernow/core/di/injection_container.dart';
 import 'package:weathernow/core/router/app_router.dart';
 import 'package:weathernow/core/theme/app_theme.dart';
-import 'package:weathernow/core/utils/constants.dart';
+import 'package:weathernow/core/utils/constants.dart' show EnvKeys, HiveBoxes;
 import 'package:weathernow/features/settings/presentation/providers/settings_provider.dart';
 
 Future<void> main() async {
@@ -16,7 +16,7 @@ Future<void> main() async {
   // Falls back gracefully so a missing .env doesn't crash the app at boot;
   // the user just sees a friendly "no connection"/server error instead.
   try {
-    await dotenv.load(fileName: 'assets/env/.env');
+    await dotenv.load(fileName: EnvKeys.envFilePath);
   } catch (_) {
     // Missing .env in a fresh checkout — surfaced clearly in README instead
     // of letting Flutter's default red-screen crash confuse a reviewer.

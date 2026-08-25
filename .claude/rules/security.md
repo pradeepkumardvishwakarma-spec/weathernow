@@ -1,6 +1,6 @@
 # Security Rule
 
-- API key: never hard-coded, never committed. Lives only in git-ignored `assets/env/.env`, loaded via `flutter_dotenv`.
+- API key: never hard-coded, never committed. Lives only in git-ignored `assets/env/.env`, loaded via `flutter_dotenv`. The `.env` key *names* (`OPEN_WEATHER_API_KEY`, `OPEN_WEATHER_BASE_URL`) and file path live in `core/utils/constants.dart`'s `EnvKeys` — one source of truth so a typo in a key name can't silently fail in two different places.
 - Never log a full request/response that could contain the API key.
 - The UI never shows a raw exception/error string — only a pre-written `Failure.message`.
 - No secrets stored in Hive.

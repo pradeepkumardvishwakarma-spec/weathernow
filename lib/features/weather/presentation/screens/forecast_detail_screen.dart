@@ -53,7 +53,7 @@ class ForecastDetailScreen extends ConsumerWidget {
           final s = row.slot!;
           return ListTile(
             contentPadding: EdgeInsets.zero,
-            leading: WeatherIcon(iconCode: s.iconCode, size: 32),
+            leading: WeatherIcon(iconCode: s.iconCode, size: 44),
             title: Text(intl.DateFormat.Hm().format(s.dateTime)),
             subtitle: Text(s.description),
             trailing: Text('${convertTemp(s.temperature, unit).round()}${unitSuffix(unit)}'),

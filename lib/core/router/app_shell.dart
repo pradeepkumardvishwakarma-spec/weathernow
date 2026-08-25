@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:weathernow/core/utils/constants.dart';
 
 /// System back (button/gesture) on any of the three bottom-nav tabs is
 /// intercepted here: on Favorites/Settings it just returns you to Home,
@@ -14,7 +15,7 @@ class AppShell extends StatelessWidget {
 
   Future<void> _handleBack(BuildContext context) async {
     if (currentIndex != 0) {
-      context.go('/');
+      context.go(AppRoutes.home);
       return;
     }
     final shouldExit = await showDialog<bool>(
@@ -48,13 +49,13 @@ class AppShell extends StatelessWidget {
           onDestinationSelected: (index) {
             switch (index) {
               case 0:
-                context.go('/');
+                context.go(AppRoutes.home);
                 break;
               case 1:
-                context.go('/favorites');
+                context.go(AppRoutes.favorites);
                 break;
               case 2:
-                context.go('/settings');
+                context.go(AppRoutes.settings);
                 break;
             }
           },

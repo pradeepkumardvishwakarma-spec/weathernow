@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:weathernow/core/theme/app_theme.dart';
 import 'package:weathernow/features/weather/domain/entities/weather_entity.dart';
 import 'package:weathernow/features/settings/presentation/providers/settings_provider.dart';
 import 'package:weathernow/features/weather/presentation/widgets/weather_icon.dart';
@@ -27,11 +28,11 @@ class WeatherCard extends ConsumerWidget {
                 padding: const EdgeInsets.only(bottom: 8),
                 child: Row(
                   children: [
-                    const Icon(Icons.cloud_off, size: 16, color: Colors.orange),
+                    const Icon(Icons.cloud_off, size: 16, color: AppTheme.warningColor),
                     const SizedBox(width: 6),
                     Text(
                       'Updated ${timeAgo(weather.fetchedAt)} · offline',
-                      style: const TextStyle(color: Colors.orange, fontSize: 13),
+                      style: const TextStyle(color: AppTheme.warningColor, fontSize: 13),
                     ),
                   ],
                 ),
@@ -56,11 +57,11 @@ class WeatherCard extends ConsumerWidget {
             const SizedBox(height: 12),
             Row(
               children: [
-                Icon(Icons.water_drop_outlined, size: 18, color: Colors.grey[600]),
+                const Icon(Icons.water_drop_outlined, size: 18, color: AppTheme.mutedColor),
                 const SizedBox(width: 4),
                 Text('${weather.humidity}%'),
                 const SizedBox(width: 20),
-                Icon(Icons.air, size: 18, color: Colors.grey[600]),
+                const Icon(Icons.air, size: 18, color: AppTheme.mutedColor),
                 const SizedBox(width: 4),
                 Text('${weather.windSpeed.toStringAsFixed(1)} m/s'),
               ],

@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:weathernow/core/utils/constants.dart';
 
 /// Thin wrapper around Dio so the rest of the app depends on this
 /// abstraction, not on Dio directly (easier to mock in tests, and
@@ -10,7 +11,7 @@ class DioClient {
   DioClient() {
     dio = Dio(
       BaseOptions(
-        baseUrl: dotenv.env['OPEN_WEATHER_BASE_URL'] ?? 'https://api.openweathermap.org',
+        baseUrl: dotenv.env[EnvKeys.baseUrl] ?? EnvKeys.fallbackBaseUrl,
         connectTimeout: const Duration(seconds: 30),
         receiveTimeout: const Duration(seconds: 30),
         // Never log the API key. Query params are added per-request,
@@ -22,7 +23,7 @@ class DioClient {
       InterceptorsWrapper(
         onRequest: (options, handler) {
           // API key is injected here, not stored in widgets/UI code.
-          options.queryParameters['appid'] = dotenv.env['OPEN_WEATHER_API_KEY'];
+          options.queryParameters['appid'] = dotenv.env[EnvKeys.apiKey];
           return handler.next(options);
         },
         onError: (DioException e, handler) {
