@@ -272,6 +272,167 @@ The lesson: a package's name, popularity, or having a plausible-sounding "_plus"
 
 ---
 
+## Real example 7: weather icons had no contrast handling against their background
+
+**What the AI suggested**
+
+`WeatherIcon` rendered OpenWeatherMap's icon CDN image directly via `CachedNetworkImage`, with
+no background/contrast handling — just the raw PNG at whatever size was requested.
+
+**Why it was wrong**
+
+OpenWeatherMap's weather icons are white/light line-art on a transparent background. On this
+project's white (or near-white, `#F5F6FA`) card backgrounds in light mode, a white cloud icon on
+a white card has effectively zero contrast — the icon was rendering, just invisible. This isn't
+something a code review catches, since the widget code itself is correct Flutter — it only shows
+up by actually looking at the rendered UI.
+
+**How I caught it**
+
+Not by me — the user looked at the app in light mode on a real device: "in white theme clouds
+are not visible since background cards are also white or similar to that."
+
+**What I changed**
+
+Added a light sky-blue circular backdrop (`AppTheme.iconBackdrop`) behind the icon glyph, applied
+once inside `WeatherIcon` itself so every screen that uses it (`WeatherCard`, `ForecastStrip`,
+Favorites, Forecast Detail) picks it up automatically. Made it light-mode-only — dark mode's
+cards are already dark enough for the white glyph to read on their own, so forcing the same
+backdrop there would just be an unnecessary light patch (caught by the user immediately: "in
+case of dark theme this sky blue background will not be there").
+
+---
+
+## Real example 8: Favorites' empty state was missing its own AppBar
+
+**What the AI suggested**
+
+`FavoritesScreen`'s empty-favorites branch returned `Scaffold(body: Center(child: Text(...)))`
+with no `appBar` at all, while the populated-list branch a few lines below correctly had one.
+
+**Why it was wrong**
+
+Anyone who hadn't favorited a city yet — which is the actual first-run experience for this
+screen — saw a bare screen with no title, no consistent chrome with the rest of the app. It also
+had no horizontal padding around the message text, so on a narrow screen the sentence could run
+close to the edges. Both were easy to miss by only glancing at the "happy path" (populated list)
+branch during review.
+
+**How I caught it**
+
+The user flagged it directly during a UI pass: "favorites text is not given right and left margin
+appbar is also not there." Confirmed by reading the actual file rather than assuming from memory
+— the missing `appBar` was exactly where described.
+
+**What I changed**
+
+Added the same `AppBar(title: const Text('Favorites'))` to the empty-state `Scaffold`, and wrapped
+the message in `Padding` with horizontal margin and centered text alignment.
+
+---
+
+## Real example 9: pubspec.yaml carried dependencies for a code-gen approach that was never adopted
+
+**What the AI suggested**
+
+`pubspec.yaml` had `riverpod_annotation` and `riverpod_generator` (Riverpod's `@riverpod`
+code-generation style) and `hive_generator` + `build_runner` (generated Hive `TypeAdapter`s)
+sitting alongside `flutter_lints`/`mocktail` as if they were in active use.
+
+**Why it was wrong**
+
+None of them were. Every provider in this codebase is a hand-written `StateNotifierProvider` —
+zero `@riverpod` annotations, zero `.g.dart` files anywhere. Hive persistence uses plain
+`Map<String, dynamic>` serialization (`toHiveJson()`/`fromHiveJson()`), a deliberate, already-
+documented choice — not generated `TypeAdapter`s. With neither approach actually used,
+`build_runner` (a genuinely heavy dev dependency — it noticeably slows down `pub get`/CI) had
+nothing to generate. `cupertino_icons` (the default `flutter create` scaffold dependency) was
+also dead weight — the app uses `Icons.*` (Material) everywhere, never `CupertinoIcons.*`.
+
+**How I caught it**
+
+Not from reading feature code — a direct, targeted audit: grepped the entire `lib/` tree for
+`@riverpod`, any `.g.dart` file, `HiveType`/`TypeAdapter`/`HiveField` usage, and `CupertinoIcons`.
+Zero real matches for any of them confirmed they were safe to remove, rather than assuming from
+the dependency names alone.
+
+**What I changed**
+
+Removed all 5 from `pubspec.yaml`. Verified afterward that `flutter analyze` and `flutter test`
+still passed clean with them gone.
+
+---
+
+## Real example 10: Forecast Detail's "Evening" section showed hours out of order
+
+**What the AI suggested**
+
+`evening = day.slots.where((s) => s.dateTime.hour >= 17 || s.dateTime.hour < 5).toList();` — a
+single `.where()` filter over the day's slot list, which is stored in raw chronological order
+starting from 00:00.
+
+**Why it was wrong**
+
+`.where()` preserves the original iteration order — it doesn't reorder by the condition. Since
+the day's slots start at 00:00, filtering for "hour ≥ 17 OR hour < 5" picks up that day's own
+00:00/03:00 slots *first* (they appear earlier in the source list) and 18:00/21:00 *last*,
+rendering the section as `00:00, 03:00, 18:00, 21:00` instead of the natural evening-forward
+order `18:00, 21:00, 00:00, 03:00`. The bucketing logic itself (which hours count as "evening")
+was correct; only the display order within that bucket was wrong.
+
+**How I caught it**
+
+Not by me — the user noticed it directly while looking at real data: "but in afternoon after
+showing 15:00 it should show 18:00, then 21:00, then 00:00 and then 03:00."
+
+**What I changed**
+
+Rebuilt `evening` as two chronological halves concatenated — everything from 17:00 onward, then
+everything before 5:00 — instead of a single unordered filter:
+```dart
+final evening = [
+  ...day.slots.where((s) => s.dateTime.hour >= 17),
+  ...day.slots.where((s) => s.dateTime.hour < 5),
+];
+```
+
+---
+
+## Real example 11: "Last searched city" was saved even when the search failed, bypassing the repository layer to do it
+
+**What the AI suggested**
+
+`SearchHomeScreen._search()` wrote `lastCity` to Hive unconditionally, at the moment of
+submission — before knowing whether the search would actually succeed. It also read/wrote this
+directly via `Hive.box(HiveBoxes.settings)` inside the widget itself, bypassing the
+provider → use case → repository chain this project's own architecture rule requires.
+
+**Why it was wrong**
+
+A failed search (e.g. searching a city with no cache while offline) would overwrite whatever the
+previous, genuinely successful "last city" was. So reopening the app afterward would try to
+reload the *failed* city instead of the last one that actually worked — showing an error where
+the user expected to see their real last-known weather. Separately, the direct Hive access in
+the widget violated this project's own rule that presentation must never touch Hive directly —
+a violation that had gone unnoticed since it predated this session's architecture work.
+
+**How I caught it**
+
+Not by me — the user reported the exact symptom: "i have added surat in my favorite then after
+killing and reopening the app surat should be able to see right now new delhi is there in
+textfield and saying no internet connection... which is incorrect." Traced it to the
+unconditional `Hive.box(...).put()` call in `_search()`.
+
+**What I changed**
+
+Added `getLastCity()`/`setLastCity()` to `SettingsRepository`/`SettingsRepositoryImpl` (same
+pattern as the existing `getSettings()`/`setUnit()`), exposed `lastCity` and `saveLastCity()` on
+`SettingsNotifier`, changed `WeatherNotifier.searchCity()` to return `Future<bool>` reflecting
+actual success, and updated `SearchHomeScreen` to only call `saveLastCity()` after confirming the
+search succeeded — never on failure.
+
+---
+
 ## Categories worth watching for while you build
 
 (Kept as a general reference — useful if you hit a further example before submitting.)

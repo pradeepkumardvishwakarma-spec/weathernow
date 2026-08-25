@@ -45,11 +45,18 @@ class _CitySearchBarState extends State<CitySearchBar> {
       child: TextField(
         controller: _controller,
         textInputAction: TextInputAction.search,
+        // Defensive guard against pasting a huge block of text — not a
+        // "valid city name" filter (real city names legitimately use
+        // symbols/accents/non-Latin scripts, so we deliberately don't
+        // restrict which characters are allowed here).
+        maxLength: 85,
+        maxLengthEnforcement: MaxLengthEnforcement.enforced,
         onChanged: _onChanged,
         onSubmitted: (value) {
           if (value.trim().isNotEmpty) widget.onSubmittedCity(value.trim());
         },
         decoration: InputDecoration(
+          counterText: '',
           hintText: 'Search for a city…',
           prefixIcon: const Icon(Icons.search),
           suffixIcon: _controller.text.isNotEmpty

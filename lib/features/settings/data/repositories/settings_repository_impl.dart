@@ -18,4 +18,12 @@ class SettingsRepositoryImpl implements SettingsRepository {
   Future<void> setUnit(TemperatureUnit unit) async {
     await _box.put(SettingsKeys.unit, unit == TemperatureUnit.fahrenheit ? 'imperial' : 'metric');
   }
+
+  @override
+  Future<String?> getLastCity() async => _box.get(SettingsKeys.lastCity) as String?;
+
+  @override
+  Future<void> setLastCity(String city) async {
+    await _box.put(SettingsKeys.lastCity, city);
+  }
 }

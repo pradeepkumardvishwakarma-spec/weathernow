@@ -18,8 +18,11 @@ class WeatherNotifier extends StateNotifier<WeatherState> {
     required this.getForecast,
   }) : super(const WeatherState());
 
-  Future<void> searchCity(String city) async {
-    if (city.trim().isEmpty) return;
+  /// Returns whether the search actually succeeded (fresh fetch or a
+  /// successful cache fallback) - callers that persist "last searched
+  /// city" should only do so when this is true, never on a failed search.
+  Future<bool> searchCity(String city) async {
+    if (city.trim().isEmpty) return false;
 
     // Cancel any in-flight request for a previous city before starting a new one.
     _cancelToken?.cancel();
@@ -34,11 +37,12 @@ class WeatherNotifier extends StateNotifier<WeatherState> {
 
     // If this search was superseded by a newer one, do nothing — the newer
     // search's own call will update state.
-    if (cancelToken.isCancelled) return;
+    if (cancelToken.isCancelled) return false;
 
-    await weatherResult.fold(
+    return weatherResult.fold(
       (failure) async {
         state = state.copyWith(status: WeatherStatus.error, errorMessage: failure.message);
+        return false;
       },
       (weather) async {
         final forecastResult = await getForecast(
@@ -58,6 +62,7 @@ class WeatherNotifier extends StateNotifier<WeatherState> {
             );
           },
         );
+        return true;
       },
     );
   }

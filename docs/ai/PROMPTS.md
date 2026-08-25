@@ -171,3 +171,127 @@
 > earlier as well. please replace it with listview.builder
 
 ---
+
+### 19. Theming — from bare default to an owned, specified palette
+
+**Prompt:**
+> actually it is not looking good in real it looks like i have just created the app not owned
+> it what do you say??
+>
+> :root { --primary-color: #4a90e2; /* Sky Blue */ --secondary-color: #f5f6fa; /* Light Gray */
+> --accent-color: #2ecc71; /* Green */ --warning-color: #f1c40f; /* Yellow */ --danger-color:
+> #e74c3c; /* Red */ --text-color: #2c3e50; /* Dark Gray */ --light-text: #ecf0f1;
+> --background-color: #ffffff; }
+>
+> use above color also app bar height is too much reduce it in favorites text is not given
+> right and left margin appbar is also not there please build like a production app and not
+> just the app
+
+### 20. Weather icons invisible against a white card in light mode
+
+**Prompt:**
+> in white theme clouds are not visible since background cards are also white or similar to
+> that so make it light sky blue so that it is visible in light themw
+>
+> in case of dark theme this sky blue background will not be there
+
+### 21. Centralize scattered string literals
+
+**Prompt:**
+> any strings constants are there then add that in constants file and take from there
+
+### 22. Auditing and expanding `.claude/agents`, `skills`, and `rules`
+
+**Prompt:**
+> requesting you to thoroughly check agents, skills and rules and if anything is pending to
+> add based on my project then please add that
+>
+> related to architecture, then in qa reveriwer whatever specified in document add that
+>
+> qa reviewer means what qa will check and according to that code is there or not this what
+> qa means. qa doesnt have to do anyhting with prompts, api integration, db, architecure you
+> got my point. also in flutter-architecture mention like created core folder, add constants,
+> exceptions, failure make feature first architecure make seperate file for DI all this
+> things add.
+
+### 23. Two security hardening features added, then both removed
+
+Both of these were explicitly requested and implemented, then explicitly reverted once a real
+flaw in each was found — API-key encryption (the decryption key/IV would have shipped inside
+the app too, just relocating the problem rather than solving it) and root/jailbreak detection
+(the underlying package flagged emulators as compromised, which would block the app from
+opening at all in an emulator review environment).
+
+**Prompt:**
+> i dont want my key to be extractable from apk so use encrption package with key and iv or root/jailbreak detection
+>
+> but in document they have specifically mentioned that Handle security sensibly throughout —
+> we'll be paying attention to this.
+>
+> yes do the changes but first let me know what you are doing then do the changes
+>
+> [chose "Real AES encryption (adds 1 package)" from the options presented]
+>
+> so this key and iv also can get hacked by any attacker
+>
+> cant we make use of flutter secure storage?
+>
+> remove this code then and check for root/jailbreak detection only
+>
+> can we do like we remove the jailbreak but add in readme stating that we can add
+> root/jailbreak for security purpose because on simulator it is showing jailbreak message??
+
+---
+
+### 24. Dependency hygiene sweep
+
+**Prompt:**
+> is there anything in project whcih i need to remove or which is of no use unncesary there
+> in file??
+>
+> build_runner we use for generating tests??
+>
+> remove then
+
+---
+
+### 25. Forecast Detail logic walkthrough, and an ordering bug found along the way
+
+**Prompt:**
+> what is the logic for showing forecast details??
+>
+> so for example for today and tommorrow what will be the data??
+>
+> tommorrow eveing i am getting 00:00, 03:00, 18:00 and 21:00 why so??
+>
+> but in afternoon after showing 15:00 it should show 18:00, then 21:00, then 00:00 and then
+> 03:00
+
+---
+
+### 26. "Last searched city" bug after an offline search — traced and fixed
+
+**Prompt:**
+> so what is happening when i am offline and search new delhi it will not show because i have
+> not added in favorite which is correct but i have added surat in my favorite then after
+> killing and reopening the app surat should be able to see right now new delhi is there in
+> textfield and saying no internet connection... which is incorrect
+>
+> the flow will be if internet is there then last searched city and its data will be shown if
+> internet is not there then last added favorites will be there correct this flow you are
+> talking about also??
+>
+> what is there in document??
+>
+> but fix this issue
+
+---
+
+### 27. Search input validation — max length only, no character restrictions
+
+**Prompt:**
+> there will be any validation to search box means any symbol should not there, any length
+> wise check what you say??
+>
+> maxlength guard add
+

@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hive/hive.dart';
 import 'package:weathernow/core/theme/app_theme.dart';
-import 'package:weathernow/core/utils/constants.dart';
 import 'package:weathernow/features/favorites/presentation/providers/favorites_provider.dart';
+import 'package:weathernow/features/settings/presentation/providers/settings_provider.dart';
 import 'package:weathernow/features/weather/presentation/providers/weather_provider.dart';
 import 'package:weathernow/features/weather/presentation/providers/weather_state.dart';
 import 'package:weathernow/features/weather/presentation/widgets/city_search_bar.dart';
@@ -23,19 +22,26 @@ class _SearchHomeScreenState extends ConsumerState<SearchHomeScreen> {
   @override
   void initState() {
     super.initState();
-    // "Opens on ... the last city you looked at, if any" — restore
-    // it and kick off a search automatically.
-    _lastCity = Hive.box(HiveBoxes.settings).get(SettingsKeys.lastCity) as String?;
+    // "Opens on ... the last city you looked at, if any" — restore it and
+    // kick off a search automatically. Loaded synchronously here because
+    // SettingsNotifier.load() already populated it before runApp (see
+    // main.dart), same pattern as the unit preference.
+    _lastCity = ref.read(settingsProvider.notifier).lastCity;
     if (_lastCity != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        ref.read(weatherProvider.notifier).searchCity(_lastCity!);
+        _search(_lastCity!);
       });
     }
   }
 
-  void _search(String city) {
-    Hive.box(HiveBoxes.settings).put(SettingsKeys.lastCity, city);
-    ref.read(weatherProvider.notifier).searchCity(city);
+  Future<void> _search(String city) async {
+    final succeeded = await ref.read(weatherProvider.notifier).searchCity(city);
+    // Only remember this as "last city" if the search actually worked —
+    // otherwise a failed/offline search would silently overwrite a
+    // perfectly good previous city with one that has no data at all.
+    if (succeeded) {
+      ref.read(settingsProvider.notifier).saveLastCity(city);
+    }
   }
 
   @override

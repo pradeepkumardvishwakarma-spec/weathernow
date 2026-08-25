@@ -17,10 +17,18 @@ class ForecastDetailScreen extends ConsumerWidget {
     final settings = ref.watch(settingsProvider);
     final unit = settings.unit;
 
-    // Bucket the 3-hour slots into morning / afternoon / evening.
+    // Bucket the 3-hour slots into morning / afternoon / evening. Evening
+    // wraps past midnight (17:00-23:59, then 00:00-04:59), so it's built as
+    // two chronological halves concatenated - 18:00, 21:00, 00:00, 03:00 -
+    // rather than a single hour-value filter, which would sort the
+    // post-midnight slots (numerically smaller hours) before the
+    // pre-midnight ones despite them actually coming later on the clock.
     final morning = day.slots.where((s) => s.dateTime.hour >= 5 && s.dateTime.hour < 12).toList();
     final afternoon = day.slots.where((s) => s.dateTime.hour >= 12 && s.dateTime.hour < 17).toList();
-    final evening = day.slots.where((s) => s.dateTime.hour >= 17 || s.dateTime.hour < 5).toList();
+    final evening = [
+      ...day.slots.where((s) => s.dateTime.hour >= 17),
+      ...day.slots.where((s) => s.dateTime.hour < 5),
+    ];
 
     // Flattened into one row list so ListView.builder can lazily build
     // only what's visible, instead of every ListTile (and its weather

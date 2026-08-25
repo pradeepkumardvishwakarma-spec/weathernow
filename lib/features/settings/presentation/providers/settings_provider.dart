@@ -10,8 +10,15 @@ class SettingsNotifier extends StateNotifier<SettingsEntity> {
   final SettingsRepository repository;
   SettingsNotifier(this.repository) : super(const SettingsEntity());
 
+  // Not part of SettingsEntity/state on purpose - it's read once by the
+  // Search screen at startup, not watched reactively, so it shouldn't
+  // trigger a rebuild of every settingsProvider listener when it changes.
+  String? _lastCity;
+  String? get lastCity => _lastCity;
+
   Future<void> load() async {
     state = await repository.getSettings();
+    _lastCity = await repository.getLastCity();
   }
 
   Future<void> toggleUnit() async {
@@ -20,6 +27,14 @@ class SettingsNotifier extends StateNotifier<SettingsEntity> {
         : TemperatureUnit.celsius;
     await repository.setUnit(newUnit);
     state = SettingsEntity(unit: newUnit);
+  }
+
+  // Only ever call this after a search actually succeeds (fresh fetch or
+  // a successful cache fallback) - never on a failed search, so a bad
+  // query can't overwrite a perfectly good previous "last city."
+  Future<void> saveLastCity(String city) async {
+    _lastCity = city;
+    await repository.setLastCity(city);
   }
 }
 
