@@ -143,65 +143,31 @@
 
 ---
 
-### 16. Meaningful tests, not exhaustive ones — 2026-08-24
-**Tool:** Claude Code
+### 16. Meaningful tests, not exhaustive ones
 
 **Prompt:**
 > so do the meaningful test what is actual needed and all let me know how this
 > has to be done becoz if interviewer ask me then i should also be able to do
 > it
 
-(after checking the brief's actual wording on testing — "a handful of tests
-that actually matter beats 100% coverage on trivial stuff" — and narrowing a
-long list of possible test gaps down to the two that genuinely mattered)
-
-**Outcome:**
-Added `getForecast()` test coverage to `weather_repository_impl_test.dart`
-(online success + caching, offline fallback, offline-with-no-cache) — this
-method had its own separate offline-branching logic that was completely
-untested, unlike `getCurrentWeather`'s identical-shaped logic. Added a new
-`test/data/favorites_local_datasource_test.dart` (4 tests) covering the
-actual bug found earlier this session: a malformed cache entry no longer
-breaks the whole favorites list, and city keys are case-insensitive. Used
-two different testing techniques depending on how each class receives its
-dependencies: `mocktail` for the repository (constructor-injected
-interfaces), a real temporary-directory Hive instance for the datasource
-(which calls `Hive.box(...)` internally, nothing to inject a mock into).
-
 ---
 
-### 17. Tests that had never actually been run had real bugs — 2026-08-24
-**Tool:** Claude Code
+### 17. Tests that had never actually been run had real bugs
 
 **Prompt:**
 > [pasted real `flutter test` output, across several rounds]
 
-**Outcome:**
-Running the suite for the first time surfaced four genuine, pre-existing
-bugs that had never been caught because these tests had never actually
-been executed successfully before — none of them were introduced this
-session:
-1. `weather_repository_impl_test.dart` never called
-   `registerFallbackValue()` for `WeatherModel`/`ForecastModel` — mocktail
-   requires this for any custom type used with `any()`, and its absence
-   also corrupted mocktail's internal matcher state enough to cause
-   confusing, seemingly-unrelated failures in the next test.
-2. `search_home_screen_test.dart` never initialized Hive, but
-   `SearchHomeScreen.initState()` calls `Hive.box(...)` directly — the
-   widget crashed on build with `Box not found`.
-3. The same file's `FakeWeatherNotifier` passed `throw
-   UnimplementedError()` directly as a constructor argument — Dart
-   evaluates constructor arguments eagerly, so this threw immediately on
-   construction, before the constructor body even ran. Replaced with
-   harmless `mocktail` mock instances instead, since those fields are
-   genuinely never invoked once `searchCity`/`retry` are overridden.
-4. `search_home_screen.dart` reads `favoritesProvider` unconditionally at
-   the top of `build()` (for the star-icon state), but the test never
-   overrode it — it hit real, unregistered `GetIt` and threw. Added a
-   `FakeFavoritesNotifier` override, same reasoning as #3.
+---
 
-Fixed all four, one round at a time, each verified by the user actually
-re-running `flutter test` and pasting the real output back — not assumed
-fixed from code review alone.
+### 18. DevTools-driven jank investigation
+
+**Prompt:**
+> [pasted real Flutter DevTools Performance-tab readings and `Choreographer`/frame-tracker
+> log output across several rounds — cold start, opening the keyboard on the search
+> screen, and navigating to forecast detail — reporting the actual UI ms / raster ms
+> per flagged frame each time]
+>
+> wherever listview is there in project repalce it with listview.builder i told this
+> earlier as well. please replace it with listview.builder
 
 ---

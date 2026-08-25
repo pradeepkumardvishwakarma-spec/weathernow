@@ -33,13 +33,19 @@ class _CityWeatherScreenState extends ConsumerState<CityWeatherScreen> {
       body: switch (state.status) {
         WeatherStatus.loading || WeatherStatus.initial => const Center(child: CircularProgressIndicator()),
         WeatherStatus.error => Center(child: Text(state.errorMessage ?? 'Something went wrong.')),
-        WeatherStatus.success => ListView(
-            children: [
-              if (state.weather != null) WeatherCard(weather: state.weather!),
-              if (state.forecast != null) ForecastStrip(forecast: state.forecast!),
-            ],
-          ),
+        WeatherStatus.success => _buildSuccess(state),
       },
+    );
+  }
+
+  Widget _buildSuccess(WeatherState state) {
+    final items = <Widget>[
+      if (state.weather != null) WeatherCard(weather: state.weather!),
+      if (state.forecast != null) ForecastStrip(forecast: state.forecast!),
+    ];
+    return ListView.builder(
+      itemCount: items.length,
+      itemBuilder: (context, index) => items[index],
     );
   }
 }

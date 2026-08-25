@@ -13,15 +13,14 @@ class SettingsScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),
-      body: ListView(
-        children: [
-          SwitchListTile(
-            title: const Text('Use Fahrenheit'),
-            subtitle: Text(isFahrenheit ? 'Showing °F' : 'Showing °C'),
-            value: isFahrenheit,
-            onChanged: (_) => ref.read(settingsProvider.notifier).toggleUnit(),
-          ),
-        ],
+      body: ListView.builder(
+        itemCount: 1,
+        itemBuilder: (context, index) => SwitchListTile(
+          title: const Text('Use Fahrenheit'),
+          subtitle: Text(isFahrenheit ? 'Showing °F' : 'Showing °C'),
+          value: isFahrenheit,
+          onChanged: (_) => ref.read(settingsProvider.notifier).toggleUnit(),
+        ),
       ),
     );
   }

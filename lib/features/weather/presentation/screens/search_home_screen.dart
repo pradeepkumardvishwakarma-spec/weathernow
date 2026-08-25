@@ -46,6 +46,9 @@ class _SearchHomeScreenState extends ConsumerState<SearchHomeScreen> {
         );
 
     return Scaffold(
+      // The search bar sits at the top, above where the keyboard covers -
+      // nothing on this screen needs to shift when it opens.
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: const Text('WeatherNow'),
         actions: [
@@ -106,12 +109,14 @@ class _SearchHomeScreenState extends ConsumerState<SearchHomeScreen> {
           ),
         );
       case WeatherStatus.success:
-        return ListView(
-          children: [
-            if (state.weather != null) WeatherCard(weather: state.weather!),
-            if (state.forecast != null) ForecastStrip(forecast: state.forecast!),
-            const SizedBox(height: 24),
-          ],
+        final items = <Widget>[
+          if (state.weather != null) WeatherCard(weather: state.weather!),
+          if (state.forecast != null) ForecastStrip(forecast: state.forecast!),
+          const SizedBox(height: 24),
+        ];
+        return ListView.builder(
+          itemCount: items.length,
+          itemBuilder: (context, index) => items[index],
         );
     }
   }

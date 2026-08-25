@@ -248,6 +248,30 @@ never been run isn't verified — it's just code shaped like a test.
 
 ---
 
+## Real example 6: recommended an outdated, incompatible package
+
+**What the AI suggested**
+
+For root/jailbreak detection, recommended and added `flutter_jailbreak_detection` — a well-known, commonly-referenced package for this exact purpose. Never checked whether it was still compatible with current Android tooling before adding it.
+
+**Why it was wrong**
+
+The package's Android `build.gradle` predates Android Gradle Plugin's `namespace` requirement (introduced in AGP 7.3+, and a hard build failure on AGP 8+). The package hasn't been updated to add one. This isn't visible from the package's Dart API or its pub.dev description — it only surfaces when Gradle actually tries to configure the Android build.
+
+**How I caught it**
+
+Not by me — the user ran the app on a real emulator and got a build failure: `Namespace not specified. Specify a namespace in the module's build file: ...flutter_jailbreak_detection-1.10.0\android\build.gradle`.
+
+**What I changed**
+
+Rather than guessing at a replacement package (and risking the exact same failure again), used web search to check which alternatives were actually recently maintained, then verified the most promising-looking "drop-in successor" candidate (`flutter_jailbreak_detection_plus`) before committing to it — its own pub.dev scoring report flagged the same "legacy Kotlin/Gradle configuration" warning, meaning it likely had the identical problem. Switched instead to `flutter_root_jailbreak_checker` (most recently updated of the options found), which uses a different, slightly more involved API (`checkOfflineIntegrity()` returning a result object, instead of a plain boolean) but comes from active maintenance rather than a name that merely sounded current.
+
+The lesson: a package's name, popularity, or having a plausible-sounding "_plus"/successor name doesn't confirm it's actually maintained or compatible with current tooling — worth checking recency/compatibility signals before adding a dependency, not just after it fails to build.
+
+**Postscript**: `flutter_root_jailbreak_checker` itself then printed a different, non-fatal warning (Kotlin Gradle Plugin/KGP deprecation). The instinct was to swap packages again — but checking further showed this exact warning currently affects `package_info_plus` and `share_plus` too, two of the most heavily-used plugins in the entire Flutter ecosystem. It's Flutter's own transitional migration to "Built-in Kotlin" (Flutter 3.44-3.47) affecting nearly every native-Android plugin right now, not a sign of this specific package being poorly chosen. Correctly recognizing "this is an ecosystem-wide, temporary, non-blocking condition" versus "this package is bad, try another" avoided a third unnecessary swap.
+
+---
+
 ## Categories worth watching for while you build
 
 (Kept as a general reference — useful if you hit a further example before submitting.)
